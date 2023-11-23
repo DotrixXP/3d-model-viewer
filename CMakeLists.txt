@@ -35,15 +35,22 @@ include_directories(dependencies/glad/include)
 add_library(glad dependencies/glad/src/glad.c)
 
 include_directories(dependencies/imgui)
+file(GLOB IMGUI_SOURCES "dependencies/imgui/*.cpp"
+"dependencies/imgui/backends/imgui_impl_glfw.cpp"
+"dependencies/imgui/backends/imgui_impl_opengl3.cpp")
+
+add_library(imgui ${IMGUI_SOURCES})
 
 file(GLOB_RECURSE SOURCES "src/*.hpp" "src/*.cpp" "src/*.h")
 add_executable(3DViewer ${SOURCES})
+
 set(GLFW_BUILD_WAYLAND ON)
+set(GLFW_USE_WAYLAND ON)
 if(WIN32) # Pokud je operační systém Windows
     set(CMAKE_C_COMPILER "cl")
     set(CMAKE_CXX_COMPILER "cl")
 
-    target_link_libraries(3DViewer glad glfw)
+    target_link_libraries(3DViewer glad imgui glfw)
 elseif(UNIX AND NOT APPLE) # Pokud je operační systém Linux
     set(CMAKE_C_COMPILER "clang")
     set(CMAKE_CXX_COMPILER "clang++")
@@ -52,5 +59,5 @@ elseif(UNIX AND NOT APPLE) # Pokud je operační systém Linux
     if(NOT DEFINED CMAKE_BUILD_TYPE)
 		set(CMAKE_BUILD_TYPE Release)
 	endif()
-	target_link_libraries(3DViewer PUBLIC glad glfw pthread)
+	target_link_libraries(3DViewer PUBLIC glad glfw imgui pthread)
 endif()
