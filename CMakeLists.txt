@@ -30,6 +30,7 @@ set(GLFW_INSTALL OFF CACHE BOOL "Generate installation target")
 include_directories(dependencies/glm/glm)
 
 include_directories(dependencies/glad/src)
+include_directories(dependencies/stb_image/src)
 include_directories(dependencies/glad/include)
 
 add_library(glad dependencies/glad/src/glad.c)
@@ -41,16 +42,21 @@ file(GLOB IMGUI_SOURCES "dependencies/imgui/*.cpp"
 
 add_library(imgui ${IMGUI_SOURCES})
 
+set(ASSIMP_DIR "${CMAKE_SOURCE_DIR}/dependencies/assimp")
+add_subdirectory(${ASSIMP_DIR})
+include_directories(${ASSIMP_DIR}/include)
+
 file(GLOB_RECURSE SOURCES "src/*.hpp" "src/*.cpp" "src/*.h")
 add_executable(3DViewer ${SOURCES})
 
+set(GLFW_BUILD_X11 OFF)
 set(GLFW_BUILD_WAYLAND ON)
-set(GLFW_USE_WAYLAND ON)
+
 if(WIN32) # Pokud je operační systém Windows
     set(CMAKE_C_COMPILER "cl")
     set(CMAKE_CXX_COMPILER "cl")
 
-    target_link_libraries(3DViewer glad imgui glfw)
+    target_link_libraries(3DViewer glad imgui glfw assimp)
 elseif(UNIX AND NOT APPLE) # Pokud je operační systém Linux
     set(CMAKE_C_COMPILER "clang")
     set(CMAKE_CXX_COMPILER "clang++")
@@ -59,5 +65,5 @@ elseif(UNIX AND NOT APPLE) # Pokud je operační systém Linux
     if(NOT DEFINED CMAKE_BUILD_TYPE)
 		set(CMAKE_BUILD_TYPE Release)
 	endif()
-	target_link_libraries(3DViewer PUBLIC glad glfw imgui pthread)
+	target_link_libraries(3DViewer PUBLIC glad glfw imgui assimp pthread)
 endif()

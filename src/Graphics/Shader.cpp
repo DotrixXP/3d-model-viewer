@@ -4,39 +4,30 @@ Shader::Shader(const std::string &fragmentShaderPath,
                const std::string &vertexShaderPath) {
   m_vertexShaderPath = vertexShaderPath;
   m_fragmentShaderPath = fragmentShaderPath;
-  m_geometryShaderPath = "";
-  Shader::ParseAndCreateTwoShaders();
+  Shader::ParseAndCreateShaders();
 }
 
-Shader::Shader(const std::string &fragmentShaderPath,
-               const std::string &vertexShaderPath,
-               const std::string &geometryShaderPath) {
-  m_vertexShaderPath = vertexShaderPath;
-  m_fragmentShaderPath = fragmentShaderPath;
-  m_geometryShaderPath = geometryShaderPath;
-  Shader::ParseAndCreateThreeShaders();
-}
 
 Shader::~Shader() { glDeleteProgram(m_shaderProgram); }
 
-void Shader::ParseAndCreateTwoShaders() {
-  std::ifstream vertexShaderFile;
-  std::ifstream fragmentShaderFile;
+void Shader::ParseAndCreateShaders() {
+  std::ifstream fragShaderFile;
+  std::ifstream vertShaderFile;
 
-  vertexShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-  fragmentShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+  fragShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+  vertShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
   try {
-    vertexShaderFile.open(m_fragmentShaderPath);
-    fragmentShaderFile.open(m_vertexShaderPath);
+    fragShaderFile.open(m_fragmentShaderPath);
+    vertShaderFile.open(m_vertexShaderPath);
 
     std::stringstream vertexShaderCodeStream;
     std::stringstream fragmentShaderCodeStream;
 
-    vertexShaderCodeStream << vertexShaderFile.rdbuf();
-    fragmentShaderCodeStream << fragmentShaderFile.rdbuf();
+    vertexShaderCodeStream << fragShaderFile.rdbuf();
+    fragmentShaderCodeStream << vertShaderFile.rdbuf();
 
-    vertexShaderFile.close();
-    fragmentShaderFile.close();
+    fragShaderFile.close();
+    vertShaderFile.close();
 
     m_vertexShaderCode = vertexShaderCodeStream.str();
     m_fragmentShaderCode = fragmentShaderCodeStream.str();
@@ -46,6 +37,7 @@ void Shader::ParseAndCreateTwoShaders() {
   } catch (std::ifstream::failure &e) {
     Log::LogError("Shader: " + m_fragmentShaderPath + ' ' + m_vertexShaderPath +
                   " " + std::string(e.what()));
+    return;
   }
 
   m_shaderProgram = glCreateProgram();
@@ -59,55 +51,6 @@ void Shader::ParseAndCreateTwoShaders() {
 
   glDeleteShader(vs);
   glDeleteShader(fs);
-}
-
-void Shader::ParseAndCreateThreeShaders() {
-  std::ifstream vertexShaderFile;
-  std::ifstream fragmentShaderFile;
-  std::ifstream geometryShaderFile;
-
-  vertexShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-  fragmentShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-  geometryShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-  try {
-    vertexShaderFile.open(m_fragmentShaderPath);
-    fragmentShaderFile.open(m_vertexShaderPath);
-    geometryShaderFile.open(m_geometryShaderPath);
-
-    std::stringstream vertexShaderCodeStream;
-    std::stringstream fragmentShaderCodeStream;
-    std::stringstream geometryShaderCodeStream;
-
-    vertexShaderCodeStream << vertexShaderFile.rdbuf();
-    fragmentShaderCodeStream << fragmentShaderFile.rdbuf();
-    geometryShaderCodeStream << geometryShaderFile.rdbuf();
-
-    vertexShaderFile.close();
-    fragmentShaderFile.close();
-    geometryShaderFile.close();
-
-    m_vertexShaderCode = vertexShaderCodeStream.str();
-    m_fragmentShaderCode = fragmentShaderCodeStream.str();
-    m_geometryShaderCode = geometryShaderCodeStream.str();
-
-  } catch (std::ifstream::failure &e) {
-    Log::LogError("Shader: " + std::string(e.what()));
-  }
-
-  m_shaderProgram = glCreateProgram();
-  uint32_t vs = Shader::CompileShader(GL_FRAGMENT_SHADER, m_vertexShaderCode);
-  uint32_t fs = Shader::CompileShader(GL_VERTEX_SHADER, m_fragmentShaderCode);
-  uint32_t gs = Shader::CompileShader(GL_GEOMETRY_SHADER, m_geometryShaderCode);
-
-  glAttachShader(m_shaderProgram, vs);
-  glAttachShader(m_shaderProgram, fs);
-  glAttachShader(m_shaderProgram, gs);
-  glLinkProgram(m_shaderProgram);
-  glValidateProgram(m_shaderProgram);
-
-  glDeleteShader(vs);
-  glDeleteShader(fs);
-  glDeleteShader(gs);
 }
 
 unsigned int Shader::CompileShader(unsigned int type,
@@ -211,15 +154,6 @@ std::ostream &operator<<(std::ostream &os, const Shader &sh) {
      << "\n"
      << sh.m_vertexShaderCode << std::endl
      << "/End of Fragment Shader Code/" << std::endl;
-
-  if (sh.m_geometryShaderPath != "") {
-    os << std::endl << std::endl;
-
-    os << "/Begin of Geometry Shader Code/"
-       << "\n"
-       << sh.m_geometryShaderCode << std::endl
-       << "/End of Geometry Shader Code/" << std::endl;
-  }
 
   return os;
 }

@@ -5,7 +5,6 @@
 #include <sstream>
 #include <string>
 
-// glm
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -16,24 +15,18 @@ class Shader {
 private:
   std::string m_vertexShaderPath;
   std::string m_fragmentShaderPath;
-  std::string m_geometryShaderPath;
 
   GLuint m_shaderProgram;
 
   std::string m_vertexShaderCode;
   std::string m_fragmentShaderCode;
-  std::string m_geometryShaderCode;
 
-  void ParseAndCreateThreeShaders();
-  void ParseAndCreateTwoShaders();
+  void ParseAndCreateShaders();
   uint32_t CompileShader(unsigned int type, const std::string &src);
 
 public:
   Shader(const std::string &fragmentShaderPath,
          const std::string &vertexShaderPath);
-  Shader(const std::string &fragmentShaderPath,
-         const std::string &vertexShaderPath,
-         const std::string &geometryShaderPath);
   ~Shader();
   GLuint GetShaderProgram();
   void SetUniform(std::string uniformName, int uniformData);

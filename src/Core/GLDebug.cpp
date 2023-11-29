@@ -3,8 +3,7 @@
 void GLDebug::EnableDebugMode() {
   glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true); // Funguje?
   glEnable(GL_DEBUG_OUTPUT);
-  glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); // makes sure errors are displayed
-                                         // synchronously
+  glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); // Synchroní výstup
   glDebugMessageCallback(glDebugOutput, nullptr);
   glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr,
                         GL_TRUE);

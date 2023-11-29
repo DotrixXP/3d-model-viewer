@@ -1,0 +1,13 @@
+[
+    {
+        "name": "Clang 16",
+        "generator": "Ninja",
+        "compilers": {
+            "C": "/usr/bin/clang",
+            "CXX": "/usr/bin/clang++"
+        },
+        "preferredGenerator": {
+            "name": "Ninja"
+        }
+    }
+]

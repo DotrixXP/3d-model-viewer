@@ -17,6 +17,9 @@ private:
   uint32_t errorCount;
 
 public:
+  GLDebug() = delete;
+  GLDebug(const GLDebug &) = delete;
+  GLDebug &operator=(const GLDebug &) = delete;
   static void EnableDebugMode();
   static GLenum CheckForError_(const char *file, int line);
 };

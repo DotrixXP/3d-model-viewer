@@ -1,6 +1,6 @@
 #include "Core.hpp"
 
-glm::vec3 Core::s_backgroundColor(0.2f, 0.2f, 0.6f);
+glm::vec3 Core::s_backgroundColor(1.0f, 1.0f, 1.0f);
 GLuint Core::s_render_target_texture;
 GLuint Core::s_render_target_framebuffer;
 bool Core::InitEngine() {
@@ -21,8 +21,6 @@ void Core::OnRenderEnd() {
   OpenglAPI::OnRenderEnd();
   ImguiRendering::OnRenderEnd();
   Window::OnRenderEnd(); // Výměna bufferù
-  glClearColor(0.f, 0.f, 0.f, 0.f);
-  glClear(GL_COLOR_BUFFER_BIT); // Vyčištění color bufferu za okny
 }
 
 void Core::CreateRenderTargets(int32_t width, int32_t height) {

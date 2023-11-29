@@ -1,18 +1,40 @@
+#include "Core/GLDebug.hpp"
+#include "Graphics/Model.hpp"
 #include "Core/Window.hpp"
-#include "Tools/Log.hpp"
-#include "imgui.h"
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
-#include <iostream>
 #include "GUI/WindowSystem.hpp"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 int main() {
   Window::InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "3D Model Viewer");
+  GLDebug::EnableDebugMode();
+  OpenglData::SetFaceCulling(false);
+  OpenglData::SetDepthTesting(true);
   WindowSystem windowsSystem;
+  Model backpack("../../res/backpack/backpack.obj", true);
+  glm::mat4 projection = glm::perspective(
+      glm::radians(75.0f), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f,
+      1000.0f);
+  glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, -5.0f),
+                               glm::vec3(0.0f, 0.0f, 0.0f),
+                               glm::vec3(0.0f, 1.0f, 0.0f));
+  glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f));
+  uint32_t texture = loadTexture("../../res/backpack/diffuse.jpg", GL_LINEAR);
+  backpack.OverwriteTexture(texture);
+  Shader shader("../../src/basic.frag", "../../src/basic.vert");
+  shader.SetUniform("projection", projection);
+  shader.SetUniform("view", view);
+  shader.SetUniform("model", model);
   while (!Window::WindowShouldClose()) {
     Core::OnRenderStart();
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, Core::GetRenderTargetFramebuffer());
+    backpack.DrawArrays(shader);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     windowsSystem.RenderWindows();
     Core::OnRenderEnd();
   }
