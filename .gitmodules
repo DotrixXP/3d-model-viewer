@@ -6,7 +6,7 @@
 	url = https://github.com/ocornut/imgui.git
 [submodule "dependencies/glfw"]
 	path = dependencies/glfw
-	url = https://github.com/glfw/glfw.
+	url = https://github.com/glfw/glfw.git
 [submodule "dependencies/assimp"]
 	path = dependencies/assimp
 	url = https://github.com/assimp/assimp.git
