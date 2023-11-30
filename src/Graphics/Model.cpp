@@ -5,26 +5,23 @@ Model::Model(const std::string &directoryPath, bool manualySetTextures) // .obj
   m_directoryPath = directoryPath;
   m_manualySetTextures = manualySetTextures;
   Model::LoadModel(directoryPath);
-
-  m_position = glm::vec3(0.f);
-  m_rotationDirection = glm::vec3(1.f);
-  m_rotationAngle = 0;
+  
+  m_model = glm::mat4(1.f);
 }
 
 void Model::DrawArrays(Shader &shader) {
-  m_model = glm::mat4(1.0f);
-  m_model = glm::translate(m_model, m_position);
-  m_model =
-      glm::rotate(m_model, glm::radians(m_rotationAngle), m_rotationDirection);
-  // m_model = glm::scale(m_model, m_scale);
   shader.SetUniform("model", m_model);
-  for (unsigned int i = 0; i < m_meshes.size();
+  if (m_manualySetTextures) {
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, m_loadedTextures[0].id);
+  }
+  for (uint32_t i = 0; i < m_meshes.size();
        i++) // Každý mesh ve vectoru vykreslit
     m_meshes[i].DrawArrays(shader, m_manualySetTextures);
 }
 
 void Model::DrawArraysWithModelMatrix(Shader &shader) {
-  for (unsigned int i = 0; i < m_meshes.size();
+  for (uint32_t i = 0; i < m_meshes.size();
        i++) // Každý mesh ve vectoru vykreslit
     m_meshes[i].DrawArrays(shader, m_manualySetTextures);
 }
@@ -49,16 +46,16 @@ void Model::LoadModel(std::string directoryPath) {
 }
 
 void Model::ProcessNode(aiNode *node, const aiScene *scene) {
-  // process all the node's meshes (if any)
-  for (unsigned int i = 0; i < node->mNumMeshes; i++) // Dokud i != počtu Meshů
+  //  zpracování všech meshů ve scéně
+  for (uint32_t i = 0; i < node->mNumMeshes; i++) // Dokud i != počtu Meshů
   {
     aiMesh *mesh = scene->mMeshes[node->mMeshes[i]]; // získáni meshe ze scény
     m_meshes.push_back(
         ProcessMesh(mesh, scene)); // přidání procesovaného meshe do vectoru
   }
-  // then do the same for each of its children
-  for (unsigned int i = 0; i < node->mNumChildren; i++) {
-    ProcessNode(node->mChildren[i], scene); // Zanoří se do této funkce
+  // zpracování všech potomků nodů
+  for (uint32_t i = 0; i < node->mNumChildren; i++) {
+    ProcessNode(node->mChildren[i], scene);
   }
 }
 
@@ -66,13 +63,13 @@ Mesh Model::ProcessMesh(aiMesh *mesh,
                         const aiScene *scene) // Z meshů získat vertexy
 {
   std::vector<MeshData::Vertex> vertices;
-  std::vector<unsigned int> indices;
+  std::vector<uint32_t> indices;
   std::vector<MeshData::Texture> textures;
 
   aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
 
-  // walk through each of the mesh's vertices
-  for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+  // Projit každý vertex meshe
+  for (uint32_t i = 0; i < mesh->mNumVertices; i++) {
     MeshData::Vertex vertex;
     glm::vec3 verticesVector;
 
@@ -104,11 +101,11 @@ Mesh Model::ProcessMesh(aiMesh *mesh,
   }
 
   // získání indices
-  for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
+  for (uint32_t i = 0; i < mesh->mNumFaces; i++) {
     aiFace face = mesh->mFaces[i];
 
     // Uložit získané indices do indices vectoru
-    for (unsigned int j = 0; j < face.mNumIndices; j++)
+    for (uint32_t j = 0; j < face.mNumIndices; j++)
       indices.push_back(face.mIndices[j]);
   }
 
@@ -119,6 +116,8 @@ Mesh Model::ProcessMesh(aiMesh *mesh,
       std::vector<MeshData::Texture> diffuseMaps =
           LoadMaterialTextures(material, aiTextureType_DIFFUSE, "diffuse");
       textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+
+      // TODO: Přidat specular mapy? => blinn-phong v shaderu
       std::vector<MeshData::Texture> specularMaps =
           LoadMaterialTextures(material, aiTextureType_SPECULAR, "specular");
       textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
@@ -126,13 +125,24 @@ Mesh Model::ProcessMesh(aiMesh *mesh,
   }
 
   return Mesh(vertices, indices,
-              textures); // Vrátí celý jeden Mesh (část modelu)
+              textures); // Vrátí celý jeden Mesh
 }
 
 void Model::OverwriteTexture(uint32_t texture) {
   m_loadedTextures.clear();
   m_loadedTexturesPaths.clear();
   m_loadedTextures.push_back({texture, "diffuse"});
+  m_manualySetTextures = true;
+}
+
+void Model::SetPosition(glm::vec3 position) {
+  m_model = glm::translate(m_model, position);
+}
+
+void Model::SetModelMatrix(glm::mat4 model) { m_model = model; }
+
+void Model::SetRotation(glm::vec3 rotationDirection, float rotationAngle) {
+  m_model = glm::rotate(m_model, glm::radians(rotationAngle), rotationDirection);
 }
 
 std::vector<MeshData::Texture>
@@ -143,14 +153,14 @@ Model::LoadMaterialTextures(aiMaterial *mat, aiTextureType type,
   aiString str;
   std::string filename;
 
-  for (unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
+  for (uint32_t i = 0; i < mat->GetTextureCount(type); i++) {
     mat->GetTexture(type, i, &str);
     filename = str.C_Str();
     filename =
         filename.substr(filename.find_last_of('\\') + 1, filename.length());
     filename = m_directoryPath + "/textures/" + filename;
 
-    for (unsigned int j = 0; j < m_loadedTextures.size(); j++) {
+    for (uint32_t j = 0; j < m_loadedTextures.size(); j++) {
       if (m_loadedTexturesPaths[j] == str.C_Str()) {
         texturesToReturn.push_back(
             m_loadedTextures[j]); // Vrátí texturu co byla první použita
@@ -174,15 +184,7 @@ Model::LoadMaterialTextures(aiMaterial *mat, aiTextureType type,
 }
 
 void Model::SetScale(glm::vec3 scale) {
-  // std::cout << "Upozorneni! Model: U slozitejsich modelu se nemusi zmena
-  // scale faktoru projevit!\n";
-  m_scale = glm::vec3(scale.x, scale.y, scale.z);
-}
-
-void Model::SetScale(float x, float y, float z) {
-  // std::cout << "Upozorneni! Model: U slozitejsich modelu se nemusi zmena
-  // scale faktoru projevit!\n";
-  m_scale = glm::vec3(x, y, z);
+  m_model = glm::scale(m_model, scale);
 }
 
 Model::~Model() {

@@ -8,7 +8,7 @@
   glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_ERROR,              \
                         GL_DEBUG_SEVERITY_HIGH, 0, nullptr, GL_TRUE);
 
-void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id,
+void APIENTRY glDebugOutput(GLenum source, GLenum type, uint32_t id,
                             GLenum severity, GLsizei length,
                             const char *message, const void *userParam);
 

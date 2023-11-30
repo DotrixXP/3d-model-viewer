@@ -1,11 +1,13 @@
 #pragma once
 #include <cstdint>
 #include <string>
-// #include <windows.h>
+#ifdef PLATFORM_WINDOWS
+#include <windows.h>
+#endif
 #include <fstream>
 #include <iostream>
 
-// define NOMINMAX pøed windows.h -> jinak to rozbije assimp a možná další
+// define NOMINMAX pøed windows.h -> jinak to rozbije assimp
 
 class Log {
 private:

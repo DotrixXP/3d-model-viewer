@@ -25,8 +25,8 @@ uint32_t loadTexture(const std::string &directoryPath, uint32_t filtering) {
                  GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
 
-    if (colorChannels == 4) { // Transparentn� textury se nesm� opakovat,
-                              // proto�e to m��e zp�sobit nepr�hledn� okraje
+    if (colorChannels == 4) { // Transparentní textury se nesmí opakovat,
+                              // protože to může způsobit neprůhledné okraje
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     } else {

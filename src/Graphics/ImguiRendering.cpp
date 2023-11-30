@@ -25,3 +25,5 @@ void ImguiRendering::UpdateImgui() {
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 }
+
+

@@ -1,7 +1,5 @@
 #include "Log.hpp"
 
-// bool Log::logToFile = false;
-
 void Log::LogError(const std::string &errorMesage) {
   std::cout << "[Log System] ";
 

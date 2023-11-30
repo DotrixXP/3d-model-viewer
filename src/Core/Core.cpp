@@ -3,21 +3,21 @@
 glm::vec3 Core::s_backgroundColor(1.0f, 1.0f, 1.0f);
 GLuint Core::s_render_target_texture;
 GLuint Core::s_render_target_framebuffer;
+GLuint Core::s_render_target_depthbuffer;
+
+glm::vec2 Core::s_framebufferSize = glm::vec2(500, 500);
 bool Core::InitEngine() {
   auto result = OpenglAPI::InitOpenglAPI();
-  CreateRenderTargets(512, 512);
+  CreateRenderTargets(512, 512); // TODO:: Upravit na const defaultní velikost
   return result;
 }
 
 void Core::OnRenderStart() {
   Window::OnRenderStart(); // Vsync
   ImguiRendering::UpdateImgui();
-  Core::StartRenderingToTexture();
 }
 
 void Core::OnRenderEnd() {
-  Core::ClearBuffers();
-  Core::FinishRenderingToTexture();
   OpenglAPI::OnRenderEnd();
   ImguiRendering::OnRenderEnd();
   Window::OnRenderEnd(); // Výměna bufferù
@@ -29,26 +29,61 @@ void Core::CreateRenderTargets(int32_t width, int32_t height) {
   glBindTexture(GL_TEXTURE_2D, s_render_target_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
                GL_UNSIGNED_BYTE, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  // Vytvoření depth bufferu
+  glGenRenderbuffers(1, &s_render_target_depthbuffer);
+  glBindRenderbuffer(GL_RENDERBUFFER, s_render_target_depthbuffer);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
 
   // Vytvoření framebufferu
   glGenFramebuffers(1, &s_render_target_framebuffer);
   glBindFramebuffer(GL_FRAMEBUFFER, s_render_target_framebuffer);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                          s_render_target_texture, 0);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, s_render_target_depthbuffer);
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     Log::LogError("There was a error while creating framebuffer");
 }
-void Core::StartRenderingToTexture() {
+
+void Core::RecreateTargetTexture(int32_t width, int32_t height) {
+  std::cout << width << " " << height << "\n";
+  glGenTextures(1, &s_render_target_texture);
+  glBindTexture(GL_TEXTURE_2D, s_render_target_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+               GL_UNSIGNED_BYTE, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glBindRenderbuffer(GL_RENDERBUFFER, s_render_target_depthbuffer);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+
   glBindFramebuffer(GL_FRAMEBUFFER, s_render_target_framebuffer);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                         s_render_target_texture, 0);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, s_render_target_depthbuffer);
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    Log::LogError("There was a error while creating framebuffer");
+}
+
+void Core::StartRenderingToTexture(glm::vec2 viewportSize) { 
+    if (s_framebufferSize != viewportSize) {
+      s_framebufferSize = viewportSize;
+      Core::RecreateTargetTexture(s_framebufferSize.x, s_framebufferSize.y);
+    }
+  glBindFramebuffer(GL_FRAMEBUFFER, s_render_target_framebuffer);
+  Core::ClearBuffers();
 }
 
 GLuint Core::GetRenderTargetTexture() { return s_render_target_texture; }
 GLuint Core::GetRenderTargetFramebuffer() {
   return s_render_target_framebuffer;
 };
-void Core::FinishRenderingToTexture() { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
+void Core::FinishRenderingToTexture() {
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  Core::ClearBuffers();
+}
 void Core::UpdateVariables() { ImguiRendering::UpdateImgui(); }
 
 void Core::ClearBuffers() {

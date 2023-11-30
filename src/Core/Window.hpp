@@ -5,7 +5,6 @@
 #include <glad/glad.h>
 #include <iostream>
 #include <string>
-#include <vector>
 
 using std::cin;
 using std::cout;
@@ -37,8 +36,8 @@ public:
   Window() = delete;
   ~Window() = delete;
 
-  static bool InitWindow(const unsigned int screenWidth,
-                         const unsigned int screenHeight,
+  static bool InitWindow(const uint32_t screenWidth,
+                         const uint32_t screenHeight,
                          const std::string &windowTitle);
   static void DestroyWindow();
   static void ChangeWindowTitle(const std::string &windowTitle);

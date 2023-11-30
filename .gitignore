@@ -61,5 +61,6 @@ build.ninja
 neovide_backtraces.log
 .ninja_log
 .ninja_deps
-bin/Release
+bin/Release/*
 bin
+bin/Debug/*

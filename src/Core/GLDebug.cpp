@@ -1,9 +1,9 @@
 #include "GLDebug.hpp"
 
 void GLDebug::EnableDebugMode() {
-  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true); // Funguje?
+  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
   glEnable(GL_DEBUG_OUTPUT);
-  glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); // Synchroní výstup
+  glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); // Synchronní výstup
   glDebugMessageCallback(glDebugOutput, nullptr);
   glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr,
                         GL_TRUE);
@@ -48,10 +48,10 @@ GLenum GLDebug::CheckForError_(const char *file, int line) {
   return errorCode;
 }
 
-void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id,
+void APIENTRY glDebugOutput(GLenum source, GLenum type, uint32_t id,
                             GLenum severity, GLsizei length,
                             const char *message, const void *userParam) {
-  // ignore non-significant error/warning codes
+
   if (id == 131169 || id == 131185 || id == 131218 || id == 131204)
     return;
 

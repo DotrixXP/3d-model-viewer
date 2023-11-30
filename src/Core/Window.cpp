@@ -21,8 +21,8 @@ void Window::OnRenderEnd() {
   glfwPollEvents();
 }
 
-bool Window::InitWindow(const unsigned int windowWidth,
-                        const unsigned int windowHeight,
+bool Window::InitWindow(const uint32_t windowWidth,
+                        const uint32_t windowHeight,
                         const std::string &windowTitle) {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
