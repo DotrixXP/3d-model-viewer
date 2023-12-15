@@ -15,7 +15,8 @@ void WindowSystem::RenderWindows() {
     mainMenuBarSize = ImGui::GetWindowSize();
     if (ImGui::BeginMenu("Soubor")) {
       if (ImGui::MenuItem("Otevrit",
-                          "Ctrl+O")) { // TODO: Funkce pro otevreni souboru
+                          "Ctrl+O")) {
+        Log::LogInfo(std::string(FileDialogManager::GetInstance().InvokeFileDialog()));
       }
       if (ImGui::MenuItem("Zavrit",
                           "Ctrl+W")) { // TODO: Funkce pro zavreni aplikace

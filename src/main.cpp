@@ -16,7 +16,7 @@ int main() {
   OpenglData::SetFaceCulling(false);
   OpenglData::SetDepthTesting(true);
   WindowSystem windowsSystem;
-  
+
   Model backpack("../../res/backpack/backpack.obj");
   glm::mat4 projection = glm::perspective(
       glm::radians(75.0f), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f,

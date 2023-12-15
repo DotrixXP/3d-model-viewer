@@ -2,6 +2,7 @@
 #include "../Core/Core.hpp"
 #include "imgui.h"
 #include <cstdint>
+#include "../Tools/FileDialog.hpp"
 
 struct InputData {
   glm::vec3 modelPos;
@@ -19,6 +20,7 @@ public:
   void RenderWindows();
   InputData GetInputData();
   glm::vec2 GetViewportWinSize();
+  
 
 private:
   inline void RenderPositionsWidgets();

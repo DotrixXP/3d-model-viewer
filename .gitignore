@@ -64,3 +64,4 @@ neovide_backtraces.log
 bin/Release/*
 bin
 bin/Debug/*
+bin
