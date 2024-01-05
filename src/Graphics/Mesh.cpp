@@ -43,7 +43,7 @@ void Mesh::SetMesh() {
   glBindVertexArray(0); // unBind
 }
 
-void Mesh::DrawArrays(Shader &shader, bool manualySetTextures) {
+const void Mesh::DrawArrays(Shader &shader, bool manualySetTextures) const {
   if (!manualySetTextures) {
     for (unsigned int i = 0; i < textures.size(); i++) {
       glActiveTexture(GL_TEXTURE0 +

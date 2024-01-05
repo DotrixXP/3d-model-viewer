@@ -5,6 +5,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+
 class Model {
 private:
   bool m_manualySetTextures;
@@ -20,17 +21,14 @@ private:
   LoadMaterialTextures(aiMaterial *mat, aiTextureType type,
                        std::string typeName); // Získání Textur
   glm::mat4 m_model;
-
+  
 public:
   Model(const std::string &directoryPath,
         bool manualySetTextures =
             false); // Konstruktor s cestou k modelu jako argument
-  void DrawArrays(Shader &shader); // Vykreslit model
-  void DrawArraysWithModelMatrix(Shader &shader);
-  void SetPosition(glm::vec3 position);
-  void SetRotation(glm::vec3 rotationDirection, float rotationAngle);
-  void SetScale(glm::vec3 scale);
-  void SetModelMatrix(glm::mat4 model);
+  const void DrawArrays(Shader &shader) const;
   void OverwriteTexture(uint32_t texture);
+  const uint32_t GetVerticesCount() const;
+  const uint32_t GetIndicesCount() const;
   ~Model();
 };

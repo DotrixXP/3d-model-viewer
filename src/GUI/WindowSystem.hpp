@@ -14,17 +14,30 @@ struct InputData {
             float modelRotAngle);
 };
 
+struct CameraSettings {
+  int cameraType;
+  int projectionType; 
+  float fov;
+  CameraSettings() noexcept;
+};
+
+
+
 class WindowSystem {
 public:
   WindowSystem();
   void RenderWindows();
   InputData GetInputData();
-  glm::vec2 GetViewportWinSize();
-  
-
+  void ApplyGuiData();
+  static const glm::vec2 GetViewportWinSize();
 private:
+  static glm::vec2 s_viewportWinSize;  
   inline void RenderPositionsWidgets();
   inline void RenderClearColorPicker();
-  glm::vec2 m_viewportWinSize;
+  inline void RenderModelInfo();
+  inline void RenderCameraSettings();
+  inline ImVec2 RenderMainMenuBar();
   InputData m_inputData;
+  CameraSettings m_cameraSettings;
+
 };

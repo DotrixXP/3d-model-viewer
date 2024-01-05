@@ -10,12 +10,16 @@ using std::cin;
 using std::cout;
 using std::endl;
 
-void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-
 struct Display {
   uint32_t screenHeight;
   uint32_t screenWidth;
 };
+
+void framebuffer_size_callback(GLFWwindow *window, int width, int height);
+
+void mouse_callback(GLFWwindow *window, double xpos, double ypos);
+
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 
 class Window {
 private:

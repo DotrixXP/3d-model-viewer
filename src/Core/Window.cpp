@@ -1,19 +1,32 @@
-#define STB_IMAGE_IMPLEMENTATION
 #include "Window.hpp"
+#include "CameraSystem.hpp"
 
 GLFWwindow *Window::s_window = nullptr;
 Display *Window::s_display = nullptr;
-bool Window::s_isCursorVisible = false;
+bool Window::s_isCursorVisible = true;
 bool Window::s_isFullscreenEnabled = false;
 bool Window::s_Vsync = false;
 uint32_t Window::s_windowHeight = 720;
 uint32_t Window::s_windowWidth = 1280;
 
+void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
+  CameraSystem::GetInstance().ProcessMouseInput(xpos, ypos);
+}
+
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+  CameraSystem::GetInstance().ProcessMouseScrollInput(xoffset, yoffset);
+}
+
 void Window::OnRenderStart() {
   glfwSwapInterval(Window::GetVsyncBool()); // Vsync
   framebuffer_size_callback(Window::GetGLFWwindowRef(),
-                             Window::GetWindowWidth(),
-                             Window::GetWindowHeight());
+                            Window::GetWindowWidth(),
+                            Window::GetWindowHeight());
+  if(s_isCursorVisible)
+    glfwSetInputMode(s_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+  
+  if(!s_isCursorVisible)
+    glfwSetInputMode(s_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 void Window::OnRenderEnd() {
@@ -21,8 +34,7 @@ void Window::OnRenderEnd() {
   glfwPollEvents();
 }
 
-bool Window::InitWindow(const uint32_t windowWidth,
-                        const uint32_t windowHeight,
+bool Window::InitWindow(const uint32_t windowWidth, const uint32_t windowHeight,
                         const std::string &windowTitle) {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -49,16 +61,14 @@ bool Window::InitWindow(const uint32_t windowWidth,
 
   glfwMakeContextCurrent(s_window);
 
-  glfwSetCursorPosCallback(s_window, NULL);
-  glfwSetScrollCallback(s_window, NULL);
+  glfwSetCursorPosCallback(s_window, mouse_callback);
+  glfwSetScrollCallback(s_window, scroll_callback);
+
   glfwSetFramebufferSizeCallback(s_window, framebuffer_size_callback);
 
   Core::InitEngine();
 
   ImguiRendering::InitImgui(s_window);
-
-  // if (PlayerCamera::GetIsCameraExist())
-  // PlayerCamera::GetInstance().CreateCameraMatrixesUBO();
 
   return true;
 }

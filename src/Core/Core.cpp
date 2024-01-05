@@ -1,4 +1,5 @@
 #include "Core.hpp"
+#include "CameraSystem.hpp"
 
 glm::vec3 Core::s_backgroundColor(1.0f, 1.0f, 1.0f);
 GLuint Core::s_render_target_texture;
@@ -13,7 +14,7 @@ bool Core::InitEngine() {
 }
 
 void Core::OnRenderStart() {
-  Window::OnRenderStart(); // Vsync
+  Window::OnRenderStart();
   ImguiRendering::UpdateImgui();
 }
 
@@ -42,7 +43,8 @@ void Core::CreateRenderTargets(int32_t width, int32_t height) {
   glBindFramebuffer(GL_FRAMEBUFFER, s_render_target_framebuffer);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                          s_render_target_texture, 0);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, s_render_target_depthbuffer);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                            GL_RENDERBUFFER, s_render_target_depthbuffer);
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     Log::LogError("There was a error while creating framebuffer");
 }
@@ -62,16 +64,17 @@ void Core::RecreateTargetTexture(int32_t width, int32_t height) {
   glBindFramebuffer(GL_FRAMEBUFFER, s_render_target_framebuffer);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                          s_render_target_texture, 0);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, s_render_target_depthbuffer);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                            GL_RENDERBUFFER, s_render_target_depthbuffer);
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     Log::LogError("There was a error while creating framebuffer");
 }
 
-void Core::StartRenderingToTexture(glm::vec2 viewportSize) { 
-    if (s_framebufferSize != viewportSize) {
-      s_framebufferSize = viewportSize;
-      Core::RecreateTargetTexture(s_framebufferSize.x, s_framebufferSize.y);
-    }
+void Core::StartRenderingToTexture(glm::vec2 viewportSize) {
+  if (s_framebufferSize != viewportSize) {
+    s_framebufferSize = viewportSize;
+    Core::RecreateTargetTexture(s_framebufferSize.x, s_framebufferSize.y);
+  }
   glBindFramebuffer(GL_FRAMEBUFFER, s_render_target_framebuffer);
   Core::ClearBuffers();
 }

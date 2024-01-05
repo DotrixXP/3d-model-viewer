@@ -35,6 +35,6 @@ public:
   Mesh(std::vector<MeshData::Vertex> vertices,
        std::vector<unsigned int> indices,
        std::vector<MeshData::Texture> textures);
-  void DrawArrays(Shader &shader, bool manualySetTextures);
+  const void DrawArrays(Shader &shader, bool manualySetTextures) const;
   void Destroy();
 };

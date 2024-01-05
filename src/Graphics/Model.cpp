@@ -1,26 +1,18 @@
 ﻿#include "Model.hpp"
 
-Model::Model(const std::string &directoryPath, bool manualySetTextures) // .obj
-{
+Model::Model(const std::string &directoryPath, bool manualySetTextures) {
   m_directoryPath = directoryPath;
   m_manualySetTextures = manualySetTextures;
   Model::LoadModel(directoryPath);
-  
+
   m_model = glm::mat4(1.f);
 }
 
-void Model::DrawArrays(Shader &shader) {
-  shader.SetUniform("model", m_model);
+const void Model::DrawArrays(Shader &shader) const {
   if (m_manualySetTextures) {
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, m_loadedTextures[0].id);
   }
-  for (uint32_t i = 0; i < m_meshes.size();
-       i++) // Každý mesh ve vectoru vykreslit
-    m_meshes[i].DrawArrays(shader, m_manualySetTextures);
-}
-
-void Model::DrawArraysWithModelMatrix(Shader &shader) {
   for (uint32_t i = 0; i < m_meshes.size();
        i++) // Každý mesh ve vectoru vykreslit
     m_meshes[i].DrawArrays(shader, m_manualySetTextures);
@@ -128,6 +120,8 @@ Mesh Model::ProcessMesh(aiMesh *mesh,
               textures); // Vrátí celý jeden Mesh
 }
 
+
+
 void Model::OverwriteTexture(uint32_t texture) {
   m_loadedTextures.clear();
   m_loadedTexturesPaths.clear();
@@ -135,14 +129,20 @@ void Model::OverwriteTexture(uint32_t texture) {
   m_manualySetTextures = true;
 }
 
-void Model::SetPosition(glm::vec3 position) {
-  m_model = glm::translate(m_model, position);
+const uint32_t Model::GetVerticesCount() const {
+  uint32_t vertexCount = 0;
+  for (int i = 0; i < m_meshes.size(); i++) {
+    vertexCount += m_meshes[i].vertices.size();
+  }
+  return vertexCount;
 }
 
-void Model::SetModelMatrix(glm::mat4 model) { m_model = model; }
-
-void Model::SetRotation(glm::vec3 rotationDirection, float rotationAngle) {
-  m_model = glm::rotate(m_model, glm::radians(rotationAngle), rotationDirection);
+const uint32_t Model::GetIndicesCount() const {
+  uint32_t indicesCount = 0;
+  for (int i = 0; i < m_meshes.size(); i++) {
+    indicesCount += m_meshes[i].indices.size();
+  }
+  return indicesCount;
 }
 
 std::vector<MeshData::Texture>
@@ -181,10 +181,6 @@ Model::LoadMaterialTextures(aiMaterial *mat, aiTextureType type,
   }
 
   return texturesToReturn;
-}
-
-void Model::SetScale(glm::vec3 scale) {
-  m_model = glm::scale(m_model, scale);
 }
 
 Model::~Model() {
