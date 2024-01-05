@@ -31,7 +31,7 @@ include_directories(${GLFW_DIR}/include)
 ##
 
 # GLM
-include_directories(dependencies/glm/glm)
+include_directories(dependencies/glm/)
 ##
 
 # stb_image

@@ -31,7 +31,7 @@ const uint32_t Renderer::GetVerticesCount() const { return m_verticesCount; }
 const uint32_t Renderer::GetIndicesCount() const { return m_indicesCount; }
 
 Renderer::Renderer()
-    : m_shader(Shader("../../src/basic.frag", "../../src/basic.vert")),
+    : m_shader(Shader("shaders/basic.frag", "shaders/basic.vert")),
       m_model(glm::mat4(1.f)), m_indicesCount(0), m_verticesCount(0) {}
 
 Renderer::~Renderer() {}

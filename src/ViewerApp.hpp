@@ -26,9 +26,9 @@ inline void ViewerApp::Run() {
   OpenglData::SetDepthTesting(true);
   WindowSystem windowsSystem;
 
-  Model backpack("../../res/backpack/backpack.obj");
+  Model backpack("res/backpack/backpack.obj");
 
-  uint32_t texture = loadTexture("../../res/backpack/diffuse.jpg", GL_LINEAR);
+  uint32_t texture = loadTexture("res/backpack/diffuse.jpg", GL_LINEAR);
   backpack.OverwriteTexture(texture);
 
   while (!Window::WindowShouldClose()) {

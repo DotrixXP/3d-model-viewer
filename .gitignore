@@ -56,12 +56,14 @@ _deps
 
 build*/
 # End of https://www.toptal.com/developers/gitignore/api/cmake,c++
-neovide_backtraces.log
 build.ninja
-neovide_backtraces.log
+*.log
 .ninja_log
 .ninja_deps
 bin/Release/*
 bin
 bin/Debug/*
 bin
+src/Core/imgui.ini
+neovide_backtraces.log
+neovide_backtraces.log
