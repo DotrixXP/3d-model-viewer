@@ -13,3 +13,6 @@
 [submodule "dependencies/nativefiledialog-extended"]
 	path = dependencies/nativefiledialog-extended
 	url = https://github.com/btzy/nativefiledialog-extended.git
+[submodule "dependencies/ImGuizmo"]
+	path = dependencies/ImGuizmo
+	url = https://github.com/CedricGuillemet/ImGuizmo.git

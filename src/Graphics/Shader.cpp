@@ -1,12 +1,10 @@
 #include "Shader.hpp"
 
-Shader::Shader(const std::string &fragmentShaderPath,
-               const std::string &vertexShaderPath) {
+Shader::Shader(const char *fragmentShaderPath, const char *vertexShaderPath) {
   m_vertexShaderPath = vertexShaderPath;
   m_fragmentShaderPath = fragmentShaderPath;
   Shader::ParseAndCreateShaders();
 }
-
 
 Shader::~Shader() { glDeleteProgram(m_shaderProgram); }
 
@@ -38,6 +36,7 @@ void Shader::ParseAndCreateShaders() {
   } catch (std::ifstream::failure &e) {
     Log::LogError("Shader: " + m_fragmentShaderPath + ' ' + m_vertexShaderPath +
                   " " + std::string(e.what()));
+    throw e;
     return;
   }
 
@@ -54,8 +53,7 @@ void Shader::ParseAndCreateShaders() {
   glDeleteShader(fs);
 }
 
-uint32_t Shader::CompileShader(uint32_t type,
-                                   const std::string &shaderPath) {
+uint32_t Shader::CompileShader(uint32_t type, const std::string &shaderPath) {
   uint32_t id = glCreateShader(type);
   const char *src = shaderPath.c_str();
 
@@ -97,29 +95,25 @@ void Shader::SetUniform(std::string uniformName, uint32_t uniformData) {
 
 void Shader::SetUniform(std::string uniformName, glm::mat4 uniformData) {
   glUseProgram(m_shaderProgram);
-  uint32_t uLoc =
-      glGetUniformLocation(m_shaderProgram, uniformName.c_str());
+  uint32_t uLoc = glGetUniformLocation(m_shaderProgram, uniformName.c_str());
   glUniformMatrix4fv(uLoc, 1, GL_FALSE, glm::value_ptr(uniformData));
 }
 
 void Shader::SetUniform(std::string uniformName, glm::vec3 uniformData) {
   glUseProgram(m_shaderProgram);
-  uint32_t uLoc =
-      glGetUniformLocation(m_shaderProgram, uniformName.c_str());
+  uint32_t uLoc = glGetUniformLocation(m_shaderProgram, uniformName.c_str());
   glUniform3f(uLoc, uniformData.x, uniformData.y, uniformData.z);
 }
 
 void Shader::SetUniform(std::string uniformName, glm::vec2 uniformData) {
   glUseProgram(m_shaderProgram);
-  uint32_t uLoc =
-      glGetUniformLocation(m_shaderProgram, uniformName.c_str());
+  uint32_t uLoc = glGetUniformLocation(m_shaderProgram, uniformName.c_str());
   glUniform2f(uLoc, uniformData.x, uniformData.y);
 }
 
 void Shader::SetUniform(std::string uniformName, glm::vec4 uniformData) {
   glUseProgram(m_shaderProgram);
-  uint32_t uLoc =
-      glGetUniformLocation(m_shaderProgram, uniformName.c_str());
+  uint32_t uLoc = glGetUniformLocation(m_shaderProgram, uniformName.c_str());
   glUniform4f(uLoc, uniformData.x, uniformData.y, uniformData.z, uniformData.w);
 }
 

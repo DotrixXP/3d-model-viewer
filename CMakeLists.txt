@@ -52,6 +52,12 @@ file(GLOB IMGUI_SOURCES "dependencies/imgui/*.cpp"
 add_library(imgui ${IMGUI_SOURCES})
 ##
 
+# ImGuizmo
+include_directories(dependencies/ImGuizmo)
+file(GLOB IMGUIZMO_SOURCES "dependencies/ImGuizmo/*.cpp")
+add_library(imguizmo ${IMGUIZMO_SOURCES})
+##
+
 # Assimp
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "Disable building tests")
 set(ASSIMP_INSTALL OFF CACHE BOOL "Disable lib installing")
@@ -85,5 +91,5 @@ elseif(UNIX AND NOT APPLE) # Pokud je operační systém Linux
     if(NOT DEFINED CMAKE_BUILD_TYPE)
 		set(CMAKE_BUILD_TYPE Release)
 	endif()
-	target_link_libraries(3DViewer PUBLIC glad glfw imgui assimp pthread nfd)
+	target_link_libraries(3DViewer PUBLIC glad glfw imgui imguizmo assimp pthread nfd)
 endif()

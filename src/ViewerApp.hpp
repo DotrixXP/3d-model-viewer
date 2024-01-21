@@ -3,19 +3,20 @@
 #include "Core/Window.hpp"
 #include "GUI/WindowSystem.hpp"
 #include "Graphics/Model.hpp"
+#include "Graphics/Renderer.hpp"
+#include "Tools/ModelLoader.hpp"
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
-#include "Graphics/Renderer.hpp"
+
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
-class ViewerApp 
-{
+class ViewerApp {
 public:
-    ViewerApp() = default;
-    ~ViewerApp() = default;
-       
-    void Run();
+  ViewerApp() = default;
+  ~ViewerApp() = default;
+
+  void Run();
 };
 
 inline void ViewerApp::Run() {
@@ -26,18 +27,16 @@ inline void ViewerApp::Run() {
   OpenglData::SetDepthTesting(true);
   WindowSystem windowsSystem;
 
-  Model backpack("res/backpack/backpack.obj");
-
-  uint32_t texture = loadTexture("res/backpack/diffuse.jpg", GL_LINEAR);
-  backpack.OverwriteTexture(texture);
+  ModelLoader modelLoader;
 
   while (!Window::WindowShouldClose()) {
     auto inputData = windowsSystem.GetInputData();
     Core::OnRenderStart();
-    
+
     Core::StartRenderingToTexture(windowsSystem.GetViewportWinSize());
     CameraSystem::GetInstance().UpdateInput();
-    Renderer::GetInstance().RenderModel(backpack, inputData);
+    modelLoader.LoadSelectedModel();
+    modelLoader.RenderSelectedModel(inputData);
     windowsSystem.ApplyGuiData();
     PerfData::CollectPerformanceData();
     Core::FinishRenderingToTexture();
@@ -46,5 +45,3 @@ inline void ViewerApp::Run() {
   }
   Window::DestroyWindow();
 }
-
-

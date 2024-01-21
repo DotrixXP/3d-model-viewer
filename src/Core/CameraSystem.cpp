@@ -27,6 +27,10 @@ void CameraSystem::SetProjMatToPerspective(const glm::vec2 viewportSize) {
   }
 }
 
+const glm::mat4 CameraSystem::GetOrthoProjectionMatrix() {
+  return glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, m_staticCamera.GetNear(), m_staticCamera.GetFar());
+}
+
 void CameraSystem::SetActiveCamera(Cameras camera) { m_activeCamera = camera; }
 
 Cameras CameraSystem::GetActiveCamera() { return m_activeCamera; }
@@ -52,14 +56,14 @@ void CameraSystem::UpdateInput() {
   Window::SetCursorVisible(m_fpsCamera.GetIsCursorVisible());
 }
 
-glm::mat4 CameraSystem::GetViewMatrix() {
+const glm::mat4 CameraSystem::GetViewMatrix() const {
   if (m_activeCamera == Cameras::FIRST_PERSON) {
     return m_fpsCamera.GetViewMatrix();
   }
   return glm::mat4(1.0f);
 }
 
-glm::mat4 CameraSystem::GetProjectionMatrix() {
+const glm::mat4 CameraSystem::GetProjectionMatrix() {
   auto viewportSize = WindowSystem::GetViewportWinSize();
   switch (m_activeCamera) {
   case Cameras::FIRST_PERSON:

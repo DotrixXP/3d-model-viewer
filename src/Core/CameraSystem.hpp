@@ -16,8 +16,9 @@ public:
   Cameras GetActiveCamera();  // Vrátí aktivní kameru
   void ProcessMouseScrollInput(const float definedXOffset, const float definedYOffset);
   void ProcessMouseInput(const float definedXPos, const float definedYPos);
-  glm::mat4 GetViewMatrix();  // Vrátí view matici
-  glm::mat4 GetProjectionMatrix();  // Vrátí projekční matici                           
+  const glm::mat4 GetViewMatrix() const;  // Vrátí view matici
+  const glm::mat4 GetProjectionMatrix();  // Vrátí projekční matici  
+  const glm::mat4 GetOrthoProjectionMatrix();  // Vrátí projekční matici                                   
   FpsCamera &GetFpsCamera();  // Vrátí FPS kameru
   void UpdateInput();  // Aktualizuje vstupní data klávesnice
   void SetFov(const float fov, const glm::vec2 viewportSize);

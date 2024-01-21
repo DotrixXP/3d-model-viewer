@@ -25,8 +25,7 @@ private:
   uint32_t CompileShader(uint32_t type, const std::string &src);
 
 public:
-  Shader(const std::string &fragmentShaderPath,
-         const std::string &vertexShaderPath);
+  Shader(const char *fragmentShaderPath, const char *vertexShaderPath);
   ~Shader();
   uint32_t GetShaderProgram();
   void SetUniform(std::string uniformName, int uniformData);

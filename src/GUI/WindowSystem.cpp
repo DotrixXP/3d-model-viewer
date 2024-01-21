@@ -3,18 +3,29 @@
 #include "imgui.h"
 
 glm::vec2 WindowSystem::s_viewportWinSize = glm::vec2(-1.0f);
+std::optional<std::filesystem::path> WindowSystem::s_modelPath = std::nullopt;
 
 InputData::InputData(glm::vec3 modelPos, glm::vec3 modelRot,
                      glm::vec3 modelScale, float modelRotAngle)
     : modelPos(modelPos), modelRot(modelRot), modelScale(modelScale),
-      modelRotAngle(modelRotAngle) {}
+      modelRotAngle(modelRotAngle) {
+  model = glm::mat4(1.0f);
+  model = glm::translate(model, modelPos);
+  model = glm::rotate(model, glm::radians(modelRotAngle), modelRot);
+  model = glm::scale(model, modelScale);
+}
+
+const glm::mat4 InputData::GetModelMatrix() const { return model; }
 
 CameraSettings::CameraSettings() noexcept
     : cameraType(0), projectionType(2), fov(45.0f) {}
+
 WindowSystem::WindowSystem()
-    : m_inputData(glm::vec3(0.f, 0.f, -5.f), glm::vec3(1.0f), glm::vec3(1.0f), 0.0f) {
+    : m_inputData(glm::vec3(0.f, 0.f, -5.f), glm::vec3(1.0f), glm::vec3(1.0f),
+                  0.0f) {
   s_viewportWinSize = glm::vec2(uint32_t(500), uint32_t(500));
 }
+
 void WindowSystem::RenderWindows() {
   ImVec2 mainMenuBarSize = this->RenderMainMenuBar();
 
@@ -31,6 +42,19 @@ void WindowSystem::RenderWindows() {
   if (winSize.x > 0 && winSize.y > 0)
     s_viewportWinSize = glm::vec2(winSize.x, winSize.y);
   ImGui::Image((void *)(intptr_t)Core::GetRenderTargetTexture(), winSize);
+
+  // Gizmo
+  ImGuizmo::BeginFrame();
+  ImGuizmo::Enable(true);
+  ImGuizmo::SetOrthographic(false);
+  ImGuizmo::SetDrawlist();
+  ImGuizmo::SetRect(0, 0, s_viewportWinSize.x, s_viewportWinSize.y);
+  ImGuizmo::Manipulate(
+      glm::value_ptr(CameraSystem::GetInstance().GetViewMatrix()),
+      glm::value_ptr(CameraSystem::GetInstance().GetProjectionMatrix()),
+      ImGuizmo::TRANSLATE, ImGuizmo::WORLD, glm::value_ptr(m_inputData.model));
+  // --------------
+
   ImGui::End();
 
   ImGui::Begin("Vlastnosti", nullptr,
@@ -40,6 +64,7 @@ void WindowSystem::RenderWindows() {
   RenderClearColorPicker();
   RenderModelInfo();
   RenderCameraSettings();
+  // RenderGizmo();
   ImGui::Text("Zde budou další vlastnosti a nastavení...");
 
   ImGui::SetWindowSize(ImVec2(screenSize.x - screenSize.x / 1.5,
@@ -48,14 +73,37 @@ void WindowSystem::RenderWindows() {
   ImGui::End();
 }
 
+void WindowSystem::RenderGizmo() {
+  ImGui::Begin("Gizmo", nullptr,
+               ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+                   ImGuiWindowFlags_NoMove);
+
+  ImGuizmo::BeginFrame();
+  ImGuizmo::Enable(true);
+  ImGuizmo::SetOrthographic(false);
+  ImGuizmo::SetDrawlist();
+  ImGuizmo::SetRect(0, 0, s_viewportWinSize.x, s_viewportWinSize.y);
+  ImGuizmo::Manipulate(
+      glm::value_ptr(CameraSystem::GetInstance().GetViewMatrix()),
+      glm::value_ptr(CameraSystem::GetInstance().GetProjectionMatrix()),
+      ImGuizmo::TRANSLATE, ImGuizmo::WORLD,
+      glm::value_ptr(m_inputData.modelPos),
+      glm::value_ptr(m_inputData.modelRot),
+      glm::value_ptr(m_inputData.modelScale));
+  ImGui::End();
+}
+
+void WindowSystem::OpenModelSelectionDialog() {
+  s_modelPath = FileDialogManager::GetInstance().InvokeFileDialog();
+}
+
 ImVec2 WindowSystem::RenderMainMenuBar() {
   ImVec2 mainMenuBarSize = ImGui::GetIO().DisplaySize;
   if (ImGui::BeginMainMenuBar()) {
     mainMenuBarSize = ImGui::GetWindowSize();
     if (ImGui::BeginMenu("Soubor")) {
       if (ImGui::MenuItem("Otevrit", "Ctrl+O")) {
-        Log::LogInfo(
-            std::string(FileDialogManager::GetInstance().InvokeFileDialog()));
+        WindowSystem::OpenModelSelectionDialog();
       }
       if (ImGui::MenuItem("Zavrit",
                           "Ctrl+W")) { // TODO: Funkce pro zavreni aplikace
@@ -74,10 +122,11 @@ ImVec2 WindowSystem::RenderMainMenuBar() {
 }
 
 void WindowSystem::RenderPositionsWidgets() {
-  ImGui::SliderFloat3("Pozice", &m_inputData.modelPos.x, -10.0f, 10.0f);
-  ImGui::SliderFloat3("Rotace", &m_inputData.modelRot.x, -1.0f, 1.0f);
-  ImGui::SliderFloat3("Velikost", &m_inputData.modelScale.x, 0.0f, 10.0f);
-  ImGui::SliderFloat("Uhel rotace", &m_inputData.modelRotAngle, 0.0f, 360.0f);
+  // ImGui::SliderFloat3("Pozice", &m_inputData.modelPos.x, -10.0f, 10.0f);
+  // ImGui::SliderFloat3("Rotace", &m_inputData.modelRot.x, -1.0f, 1.0f);
+  // ImGui::SliderFloat3("Velikost", &m_inputData.modelScale.x, 0.0f, 10.0f);
+  // ImGui::SliderFloat("Uhel rotace", &m_inputData.modelRotAngle, 0.0f,
+  // 360.0f);
 }
 
 void WindowSystem::RenderClearColorPicker() {

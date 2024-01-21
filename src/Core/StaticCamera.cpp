@@ -23,6 +23,12 @@ void StaticCamera::SetFar(const float far, const glm::vec2 viewportSize) {
   m_projectionMatrix = std::nullopt;
 }
 
+const float StaticCamera::GetFov() const { return m_fov; }
+
+const float StaticCamera::GetNear() const { return m_near; }
+
+const float StaticCamera::GetFar() const { return m_far; }
+
 void StaticCamera::SetProjMatToOrtho() {
   m_isOrtho = true;
   m_projectionMatrix = std::nullopt;
