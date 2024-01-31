@@ -9,7 +9,7 @@ GLuint Core::s_render_target_depthbuffer;
 glm::vec2 Core::s_framebufferSize = glm::vec2(500, 500);
 bool Core::InitEngine() {
   auto result = OpenglAPI::InitOpenglAPI();
-  CreateRenderTargets(512, 512); // TODO:: Upravit na const defaultní velikost
+  CreateRenderTargets(531, 561); // TODO:: Upravit na const defaultní velikost
   return result;
 }
 
@@ -75,6 +75,7 @@ void Core::StartRenderingToTexture(glm::vec2 viewportSize) {
     s_framebufferSize = viewportSize;
     Core::RecreateTargetTexture(s_framebufferSize.x, s_framebufferSize.y);
   }
+  glViewport(0, 0, s_framebufferSize.x, s_framebufferSize.y);
   glBindFramebuffer(GL_FRAMEBUFFER, s_render_target_framebuffer);
   Core::ClearBuffers();
 }
@@ -84,14 +85,19 @@ GLuint Core::GetRenderTargetFramebuffer() {
   return s_render_target_framebuffer;
 };
 void Core::FinishRenderingToTexture() {
+  auto windowSize = glm::vec2(Window::GetWindowWidth(), Window::GetWindowHeight());
+  glViewport(0, 0, windowSize.x, windowSize.y);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  Core::ClearBuffers();
+  Core::ClearBuffers(true);
 }
 void Core::UpdateVariables() { ImguiRendering::UpdateImgui(); }
 
-void Core::ClearBuffers() {
-  glClearColor(s_backgroundColor.x, s_backgroundColor.y, s_backgroundColor.z,
-               1.0f);
+void Core::ClearBuffers(bool blackBackground) {
+  if (blackBackground)
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+  else
+    glClearColor(s_backgroundColor.x, s_backgroundColor.y, s_backgroundColor.z,
+                 1.0f);
 
   if (OpenglData::GetStencilTesting() && OpenglData::GetDepthTesting()) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_TEST);

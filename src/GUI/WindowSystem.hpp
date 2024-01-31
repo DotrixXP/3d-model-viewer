@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <optional>
+#include "../Core/Window.hpp"
 
 struct InputData {
 private:
@@ -28,14 +29,13 @@ public:
 struct CameraSettings {
   int cameraType;
   int projectionType;
-  float fov;
   CameraSettings() noexcept;
 };
 
 class WindowSystem {
 public:
   WindowSystem();
-  void RenderWindows();
+  void RenderWindows(bool isObjectRendered);
   InputData GetInputData();
   void ApplyGuiData();
   static const glm::vec2 GetViewportWinSize();
@@ -48,8 +48,11 @@ private:
   inline void RenderModelInfo();
   inline void RenderCameraSettings();
   inline ImVec2 RenderMainMenuBar();
-  inline void RenderGizmo();
   inline void OpenModelSelectionDialog();
+  inline void RenderGizmoSettings();
   InputData m_inputData;
   CameraSettings m_cameraSettings;
+  ImGuizmo::OPERATION m_gizmoOperation;
+  bool m_renderGizmo;
+  float m_gizmoSizeMultiplier;
 };

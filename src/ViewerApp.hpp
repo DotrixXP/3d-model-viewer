@@ -40,7 +40,7 @@ inline void ViewerApp::Run() {
     windowsSystem.ApplyGuiData();
     PerfData::CollectPerformanceData();
     Core::FinishRenderingToTexture();
-    windowsSystem.RenderWindows();
+    windowsSystem.RenderWindows(modelLoader.IsModelLoaded());
     Core::OnRenderEnd();
   }
   Window::DestroyWindow();

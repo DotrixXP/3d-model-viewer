@@ -20,13 +20,13 @@ private:
 
 public:
   FpsCamera(float fov, float sensitivity, float movementSpeed);
-  bool firstMouse;
+  bool m_firstMouse;
   void ProcessKeyboardInput();
   void ProcessMouseInput(float definedXPos, float definedYPos);
   void ProcessSrollInput(float definedXOffset, float definedYOffset);
 
   glm::mat4 GetViewMatrix() const;
-  glm::mat4 GetProjectionMatrix() const;
+  glm::mat4 GetProjectionMatrix(glm::vec2 viewportSize) const;
   glm::vec3 GetCameraPosition() const;
 
   void SetCameraMovementSpeed(float movementSpeed);

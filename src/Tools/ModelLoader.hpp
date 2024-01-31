@@ -14,4 +14,5 @@ public:
   ~ModelLoader() = default;
   void LoadSelectedModel();
   void RenderSelectedModel(InputData inputData);
+  bool IsModelLoaded();
 };

@@ -25,7 +25,7 @@ public:
   static void OnRenderStart();
   static void OnRenderEnd();
   static void UpdateVariables();
-  static void ClearBuffers();
+  static void ClearBuffers(bool whiteBackground = false);
   static void SetBackgroundColor(const glm::vec3 &color);
   static GLuint GetRenderTargetTexture();
   static GLuint GetRenderTargetFramebuffer();

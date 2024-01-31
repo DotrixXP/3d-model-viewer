@@ -1,5 +1,6 @@
 #include "WindowSystem.hpp"
 #include "../Graphics/Renderer.hpp"
+#include "ImGuizmo.h"
 #include "imgui.h"
 
 glm::vec2 WindowSystem::s_viewportWinSize = glm::vec2(-1.0f);
@@ -15,18 +16,26 @@ InputData::InputData(glm::vec3 modelPos, glm::vec3 modelRot,
   model = glm::scale(model, modelScale);
 }
 
-const glm::mat4 InputData::GetModelMatrix() const { return model; }
+const glm::mat4 InputData::GetModelMatrix() const {
+  glm::mat4 scaleMatrix =
+      glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, -1.0f, 1.0f));
+
+  return scaleMatrix * model;
+}
 
 CameraSettings::CameraSettings() noexcept
-    : cameraType(0), projectionType(2), fov(45.0f) {}
+    : cameraType(0), projectionType(2) {}
 
 WindowSystem::WindowSystem()
-    : m_inputData(glm::vec3(0.f, 0.f, -5.f), glm::vec3(1.0f), glm::vec3(1.0f),
-                  0.0f) {
+    : m_inputData(glm::vec3(2.f, 0.f, -5.f), glm::vec3(1.0f), glm::vec3(1.0f),
+                  0.0f),
+      m_renderGizmo(false), m_gizmoOperation(ImGuizmo::TRANSLATE),
+      m_gizmoSizeMultiplier(1.0f) {
+
   s_viewportWinSize = glm::vec2(uint32_t(500), uint32_t(500));
 }
 
-void WindowSystem::RenderWindows() {
+void WindowSystem::RenderWindows(bool isObjectRendered) {
   ImVec2 mainMenuBarSize = this->RenderMainMenuBar();
 
   ImVec2 screenSize = ImGui::GetIO().DisplaySize;
@@ -37,22 +46,34 @@ void WindowSystem::RenderWindows() {
   ImGui::SetWindowSize(
       ImVec2(screenSize.x / 1.5, screenSize.y - mainMenuBarSize.y));
   ImGui::SetWindowPos(ImVec2(0, mainMenuBarSize.y));
-  auto winSize = ImGui::GetWindowSize();
+
+  auto winSize = ImGui::GetWindowSize(); // Velikost okna viewportu (ImGui okna)
+
   winSize.y -= 40;
   if (winSize.x > 0 && winSize.y > 0)
-    s_viewportWinSize = glm::vec2(winSize.x, winSize.y);
-  ImGui::Image((void *)(intptr_t)Core::GetRenderTargetTexture(), winSize);
+    s_viewportWinSize = glm::vec2((uint16_t)winSize.x, (uint16_t)winSize.y);
+
+  if (isObjectRendered)
+    ImGui::Image((void *)(intptr_t)Core::GetRenderTargetTexture(),
+                 ImVec2(s_viewportWinSize.x, s_viewportWinSize.y));
+  else {
+    ImGui::Text("Není načtený žádný model");
+    ImGui::Text("Otevřete model pomocí menu Soubor -> Otevřít");
+  }
 
   // Gizmo
-  ImGuizmo::BeginFrame();
-  ImGuizmo::Enable(true);
-  ImGuizmo::SetOrthographic(false);
-  ImGuizmo::SetDrawlist();
-  ImGuizmo::SetRect(0, 0, s_viewportWinSize.x, s_viewportWinSize.y);
-  ImGuizmo::Manipulate(
-      glm::value_ptr(CameraSystem::GetInstance().GetViewMatrix()),
-      glm::value_ptr(CameraSystem::GetInstance().GetProjectionMatrix()),
-      ImGuizmo::TRANSLATE, ImGuizmo::WORLD, glm::value_ptr(m_inputData.model));
+  if (isObjectRendered && m_cameraSettings.cameraType != 1 && m_renderGizmo) {
+    ImGuizmo::BeginFrame();
+    ImGuizmo::Enable(true);
+    ImGuizmo::SetOrthographic(false);
+    ImGuizmo::SetDrawlist();
+    ImGuizmo::SetGizmoSizeClipSpace(0.15f * m_gizmoSizeMultiplier);
+    ImGuizmo::SetRect(0, 0, s_viewportWinSize.x, s_viewportWinSize.y);
+    ImGuizmo::Manipulate(
+        glm::value_ptr(CameraSystem::GetInstance().GetViewMatrix()),
+        glm::value_ptr(CameraSystem::GetInstance().GetProjectionMatrix()),
+        m_gizmoOperation, ImGuizmo::WORLD, glm::value_ptr(m_inputData.model));
+  }
   // --------------
 
   ImGui::End();
@@ -60,36 +81,22 @@ void WindowSystem::RenderWindows() {
   ImGui::Begin("Vlastnosti", nullptr,
                ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
                    ImGuiWindowFlags_NoMove);
-  RenderPositionsWidgets();
-  RenderClearColorPicker();
-  RenderModelInfo();
-  RenderCameraSettings();
-  // RenderGizmo();
-  ImGui::Text("Zde budou další vlastnosti a nastavení...");
 
   ImGui::SetWindowSize(ImVec2(screenSize.x - screenSize.x / 1.5,
                               screenSize.y - mainMenuBarSize.y));
   ImGui::SetWindowPos(ImVec2(screenSize.x / 1.5, mainMenuBarSize.y));
-  ImGui::End();
-}
 
-void WindowSystem::RenderGizmo() {
-  ImGui::Begin("Gizmo", nullptr,
-               ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-                   ImGuiWindowFlags_NoMove);
+  if (!isObjectRendered)
+    ImGui::BeginDisabled();
 
-  ImGuizmo::BeginFrame();
-  ImGuizmo::Enable(true);
-  ImGuizmo::SetOrthographic(false);
-  ImGuizmo::SetDrawlist();
-  ImGuizmo::SetRect(0, 0, s_viewportWinSize.x, s_viewportWinSize.y);
-  ImGuizmo::Manipulate(
-      glm::value_ptr(CameraSystem::GetInstance().GetViewMatrix()),
-      glm::value_ptr(CameraSystem::GetInstance().GetProjectionMatrix()),
-      ImGuizmo::TRANSLATE, ImGuizmo::WORLD,
-      glm::value_ptr(m_inputData.modelPos),
-      glm::value_ptr(m_inputData.modelRot),
-      glm::value_ptr(m_inputData.modelScale));
+  RenderClearColorPicker();
+  RenderModelInfo();
+  RenderCameraSettings();
+  RenderGizmoSettings();
+
+  if (!isObjectRendered)
+    ImGui::EndDisabled();
+
   ImGui::End();
 }
 
@@ -98,35 +105,32 @@ void WindowSystem::OpenModelSelectionDialog() {
 }
 
 ImVec2 WindowSystem::RenderMainMenuBar() {
-  ImVec2 mainMenuBarSize = ImGui::GetIO().DisplaySize;
+  ImVec2 mainMenuBarSize = ImVec2(0, 0);
+
   if (ImGui::BeginMainMenuBar()) {
     mainMenuBarSize = ImGui::GetWindowSize();
+
     if (ImGui::BeginMenu("Soubor")) {
       if (ImGui::MenuItem("Otevrit", "Ctrl+O")) {
         WindowSystem::OpenModelSelectionDialog();
       }
+
       if (ImGui::MenuItem("Zavrit",
                           "Ctrl+W")) { // TODO: Funkce pro zavreni aplikace
         Window::DestroyWindow();       // TODO: Hází výjímku - vyřešit
       }
       ImGui::EndMenu();
     }
+
     if (m_cameraSettings.cameraType == 1) {
       ImGui::Separator();
       ImGui::Text("Pohyb kamery pomocí WASD");
       ImGui::Text("Pro odemčení kurzoru stiskněte F1, pro zamčení F2");
     }
+
     ImGui::EndMainMenuBar();
   }
   return mainMenuBarSize;
-}
-
-void WindowSystem::RenderPositionsWidgets() {
-  // ImGui::SliderFloat3("Pozice", &m_inputData.modelPos.x, -10.0f, 10.0f);
-  // ImGui::SliderFloat3("Rotace", &m_inputData.modelRot.x, -1.0f, 1.0f);
-  // ImGui::SliderFloat3("Velikost", &m_inputData.modelScale.x, 0.0f, 10.0f);
-  // ImGui::SliderFloat("Uhel rotace", &m_inputData.modelRotAngle, 0.0f,
-  // 360.0f);
 }
 
 void WindowSystem::RenderClearColorPicker() {
@@ -143,11 +147,33 @@ void WindowSystem::RenderModelInfo() {
   ImGui::Separator();
 }
 
+void WindowSystem::RenderGizmoSettings() {
+  ImGui::Text("Nastavení gizma");
+  ImGui::Checkbox("Zobrazit gizmo", &m_renderGizmo);
+  if (!m_renderGizmo) {
+    ImGui::BeginDisabled();
+  }
+
+  ImGui::SliderFloat("Velikost gizma", &m_gizmoSizeMultiplier, 0.5, 1.5);
+  if (ImGui::RadioButton("Přesun", m_gizmoOperation == 0))
+    m_gizmoOperation = ImGuizmo::TRANSLATE;
+  if (ImGui::RadioButton("Rotace", m_gizmoOperation == 1))
+    m_gizmoOperation = ImGuizmo::ROTATE;
+  if (ImGui::RadioButton("Škálování", m_gizmoOperation == 2))
+    m_gizmoOperation = ImGuizmo::SCALE;
+
+  if (!m_renderGizmo) {
+    ImGui::EndDisabled();
+  }
+
+  ImGui::Separator();
+}
+
 void WindowSystem::RenderCameraSettings() {
   ImGui::Text("Nastavení kamery");
   if (ImGui::RadioButton("Freefly kamera", m_cameraSettings.cameraType == 1))
     m_cameraSettings.cameraType = 1;
-  if (ImGui::RadioButton("Statická kamera", m_cameraSettings.cameraType == 0))
+  if (ImGui::RadioButton("Orbitální kamera", m_cameraSettings.cameraType == 0))
     m_cameraSettings.cameraType = 0;
   if (m_cameraSettings.cameraType == 1) {
     ImGui::BeginDisabled();
@@ -159,7 +185,6 @@ void WindowSystem::RenderCameraSettings() {
   if (ImGui::RadioButton("Ortogonální projekce",
                          m_cameraSettings.projectionType == 3))
     m_cameraSettings.projectionType = 3;
-  ImGui::SliderFloat("FOV", &m_cameraSettings.fov, 30.0f, 150.0f);
   if (m_cameraSettings.cameraType == 1) {
     ImGui::EndDisabled();
   }
@@ -167,6 +192,9 @@ void WindowSystem::RenderCameraSettings() {
   ImGui::Separator();
 }
 void WindowSystem::ApplyGuiData() {
+  
+  CameraSystem::GetInstance().SetInputState(!m_renderGizmo);
+
   if (m_cameraSettings.projectionType == 2) {
     CameraSystem::GetInstance().SetProjMatToPerspective(s_viewportWinSize);
   } else if (m_cameraSettings.projectionType == 3) {
@@ -178,8 +206,6 @@ void WindowSystem::ApplyGuiData() {
   } else if (m_cameraSettings.cameraType == 1) {
     CameraSystem::GetInstance().SetActiveCamera(Cameras::FIRST_PERSON);
   }
-
-  CameraSystem::GetInstance().SetFov(m_cameraSettings.fov, s_viewportWinSize);
 }
 
 const glm::vec2 WindowSystem::GetViewportWinSize() { return s_viewportWinSize; }

@@ -22,10 +22,10 @@ void Window::OnRenderStart() {
   framebuffer_size_callback(Window::GetGLFWwindowRef(),
                             Window::GetWindowWidth(),
                             Window::GetWindowHeight());
-  if(s_isCursorVisible)
+  if (s_isCursorVisible)
     glfwSetInputMode(s_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-  
-  if(!s_isCursorVisible)
+
+  if (!s_isCursorVisible)
     glfwSetInputMode(s_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
@@ -104,7 +104,9 @@ void Window::SetWindowed() {
 
   Window::s_isFullscreenEnabled = false;
 }
+
 void Window::SetVsync(bool value) { s_Vsync = value; }
+
 void Window::SetWindowSize(uint32_t windowWidth, uint32_t windowHeight) {
   s_windowWidth = windowWidth;
   s_windowHeight = windowHeight;

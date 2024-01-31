@@ -6,7 +6,7 @@ FpsCamera::FpsCamera(float fov, float sensitivity, float movementSpeed) {
   m_pitch = 0.f;
   m_lastX = 1280.f / 2.f;
   m_lastY = 720.f / 2.f;
-  firstMouse = true;
+  m_firstMouse = true;
   m_movementSpeed = movementSpeed;
   m_sensitivity = sensitivity;
   
@@ -43,10 +43,10 @@ void FpsCamera::ProcessKeyboardInput() {
 }
 
 void FpsCamera::ProcessMouseInput(float definedXPos, float definedYPos) {
-  if (firstMouse) {
+  if (m_firstMouse) {
     m_lastX = definedXPos;
     m_lastY = definedYPos;
-    firstMouse = false;
+    m_firstMouse = false;
   }
 
   float xoffset = definedXPos - m_lastX;
@@ -82,8 +82,8 @@ glm::mat4 FpsCamera::GetViewMatrix() const {
   return glm::lookAt(m_cameraPos, m_cameraPos + m_cameraFront, m_cameraUp);
 }
 
-glm::mat4 FpsCamera::GetProjectionMatrix() const {
-  return glm::perspective(glm::radians(m_fov), 16.f / 9.f, 0.1f, 260.0f);
+glm::mat4 FpsCamera::GetProjectionMatrix(glm::vec2 viewportSize) const {
+  return glm::perspective(glm::radians(m_fov), viewportSize.x / viewportSize.y, 0.1f, 260.0f);
 }
 
 glm::vec3 FpsCamera::GetCameraPosition() const { return m_cameraPos; }
