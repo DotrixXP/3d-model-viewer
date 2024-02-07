@@ -57,8 +57,8 @@ void WindowSystem::RenderWindows(bool isObjectRendered) {
     ImGui::Image((void *)(intptr_t)Core::GetRenderTargetTexture(),
                  ImVec2(s_viewportWinSize.x, s_viewportWinSize.y));
   else {
-    ImGui::Text("Není načtený žádný model");
-    ImGui::Text("Otevřete model pomocí menu Soubor -> Otevřít");
+    ImGui::Text(u8"Není načtený žádný model");
+    ImGui::Text(u8"Otevřete model pomocí menu Soubor -> Otevřít");
   }
 
   // Gizmo
@@ -111,11 +111,11 @@ ImVec2 WindowSystem::RenderMainMenuBar() {
     mainMenuBarSize = ImGui::GetWindowSize();
 
     if (ImGui::BeginMenu("Soubor")) {
-      if (ImGui::MenuItem("Otevrit", "Ctrl+O")) {
+      if (ImGui::MenuItem(u8"Otevřít", "Ctrl+O")) {
         WindowSystem::OpenModelSelectionDialog();
       }
 
-      if (ImGui::MenuItem("Zavrit",
+      if (ImGui::MenuItem(u8"Zavřít",
                           "Ctrl+W")) { // TODO: Funkce pro zavreni aplikace
         Window::DestroyWindow();       // TODO: Hází výjímku - vyřešit
       }
@@ -124,8 +124,8 @@ ImVec2 WindowSystem::RenderMainMenuBar() {
 
     if (m_cameraSettings.cameraType == 1) {
       ImGui::Separator();
-      ImGui::Text("Pohyb kamery pomocí WASD");
-      ImGui::Text("Pro odemčení kurzoru stiskněte F1, pro zamčení F2");
+      ImGui::Text(u8"Pohyb kamery pomocí WASD");
+      ImGui::Text(u8"Pro odemčení kurzoru stiskněte F1, pro zamčení F2");
     }
 
     ImGui::EndMainMenuBar();
@@ -135,31 +135,31 @@ ImVec2 WindowSystem::RenderMainMenuBar() {
 
 void WindowSystem::RenderClearColorPicker() {
   static ImVec4 color = ImVec4(1.f, 1.f, 1.f, 1.f);
-  ImGui::ColorEdit3("Barva pozadí", (float *)&color);
+  ImGui::ColorEdit3(u8"Barva pozadí", (float *)&color);
   Core::SetBackgroundColor(glm::vec3(color.x, color.y, color.z));
 }
 
 void WindowSystem::RenderModelInfo() {
   ImGui::Separator();
-  ImGui::Text("Model info");
-  ImGui::Text("Počet vertexů: %d", Renderer::GetInstance().GetVerticesCount());
-  ImGui::Text("Počet indexů: %d", Renderer::GetInstance().GetIndicesCount());
+  ImGui::Text(u8"Model info");
+  ImGui::Text(u8"Počet vertexů: %d", Renderer::GetInstance().GetVerticesCount());
+  ImGui::Text(u8"Počet indexů: %d", Renderer::GetInstance().GetIndicesCount());
   ImGui::Separator();
 }
 
 void WindowSystem::RenderGizmoSettings() {
-  ImGui::Text("Nastavení gizma");
-  ImGui::Checkbox("Zobrazit gizmo", &m_renderGizmo);
+  ImGui::Text(u8"Nastavení gizma");
+  ImGui::Checkbox(u8"Zobrazit gizmo", &m_renderGizmo);
   if (!m_renderGizmo) {
     ImGui::BeginDisabled();
   }
 
-  ImGui::SliderFloat("Velikost gizma", &m_gizmoSizeMultiplier, 0.5, 1.5);
-  if (ImGui::RadioButton("Přesun", m_gizmoOperation == 0))
+  ImGui::SliderFloat(u8"Velikost gizma", &m_gizmoSizeMultiplier, 0.5, 1.5);
+  if (ImGui::RadioButton(u8"Přesun", m_gizmoOperation == 0))
     m_gizmoOperation = ImGuizmo::TRANSLATE;
-  if (ImGui::RadioButton("Rotace", m_gizmoOperation == 1))
+  if (ImGui::RadioButton(u8"Rotace", m_gizmoOperation == 1))
     m_gizmoOperation = ImGuizmo::ROTATE;
-  if (ImGui::RadioButton("Škálování", m_gizmoOperation == 2))
+  if (ImGui::RadioButton(u8"Škálování", m_gizmoOperation == 2))
     m_gizmoOperation = ImGuizmo::SCALE;
 
   if (!m_renderGizmo) {
@@ -170,19 +170,19 @@ void WindowSystem::RenderGizmoSettings() {
 }
 
 void WindowSystem::RenderCameraSettings() {
-  ImGui::Text("Nastavení kamery");
-  if (ImGui::RadioButton("Freefly kamera", m_cameraSettings.cameraType == 1))
+  ImGui::Text(u8"Nastavení kamery");
+  if (ImGui::RadioButton(u8"Freefly kamera", m_cameraSettings.cameraType == 1))
     m_cameraSettings.cameraType = 1;
-  if (ImGui::RadioButton("Orbitální kamera", m_cameraSettings.cameraType == 0))
+  if (ImGui::RadioButton(u8"Orbitální kamera", m_cameraSettings.cameraType == 0))
     m_cameraSettings.cameraType = 0;
   if (m_cameraSettings.cameraType == 1) {
     ImGui::BeginDisabled();
   }
   ImGui::Separator();
-  if (ImGui::RadioButton("Perspektivní projekce",
+  if (ImGui::RadioButton(u8"Perspektivní projekce",
                          m_cameraSettings.projectionType == 2))
     m_cameraSettings.projectionType = 2;
-  if (ImGui::RadioButton("Ortogonální projekce",
+  if (ImGui::RadioButton(u8"Ortogonální projekce",
                          m_cameraSettings.projectionType == 3))
     m_cameraSettings.projectionType = 3;
   if (m_cameraSettings.cameraType == 1) {
