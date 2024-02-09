@@ -18,6 +18,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin-int/${CMAKE_BUILD_TYPE})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin-int/${CMAKE_BUILD_TYPE})
 
+if(MSVC)
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8")
+   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /utf-8")
+endif()
+
+
 # GLFW
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs")
@@ -75,14 +81,15 @@ include_directories(${CMAKE_SOURCE_DIR}/dependencies/nativefiledialog-extended/s
 add_subdirectory(${CMAKE_SOURCE_DIR}/dependencies/nativefiledialog-extended/)
 ##
 
+
 file(GLOB_RECURSE SOURCES "src/*.hpp" "src/*.cpp" "src/*.h")
+
 add_executable(3DViewer ${SOURCES})
 
 if(WIN32) # Pokud je operační systém Windows
     set(CMAKE_C_COMPILER "cl")
     set(CMAKE_CXX_COMPILER "cl")
-
-    target_link_libraries(3DViewer glad imgui glfw assimp nfd)
+    target_link_libraries(3DViewer glad imgui imguizmo glfw assimp nfd)
 elseif(UNIX AND NOT APPLE) # Pokud je operační systém Linux
     set(CMAKE_C_COMPILER "clang")
     set(CMAKE_CXX_COMPILER "clang++")

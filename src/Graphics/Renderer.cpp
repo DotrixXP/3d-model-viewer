@@ -23,7 +23,8 @@ const uint32_t Renderer::GetVerticesCount() const { return m_verticesCount; }
 const uint32_t Renderer::GetIndicesCount() const { return m_indicesCount; }
 
 Renderer::Renderer()
-    : m_shader(Shader("../../res/basic.frag", "../../res/basic.vert")),
-      m_indicesCount(0), m_verticesCount(0) {}
-
+    : m_indicesCount(0), m_verticesCount(0),
+      m_shader((std::string(GLOBAL_PATH) + "res/basic.frag").c_str(),
+               (std::string(GLOBAL_PATH) + "res/basic.vert").c_str()) {
+}
 Renderer::~Renderer() {}

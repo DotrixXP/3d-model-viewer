@@ -3,21 +3,27 @@
 void ImguiRendering::InitImgui(GLFWwindow *window) {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
+  const std::string fontPath = std::string(GLOBAL_PATH) + std::string("res/font.ttf");
+  std::cout << "Font path: " << fontPath << std::endl;
+  // Vytvoříme si instanci ImGuiIO
   ImGuiIO &io = ImGui::GetIO();
-  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
   ImVector<ImWchar> ranges;
   ImFontGlyphRangesBuilder builder;
-  builder.AddText(u8"ěščřžýáíéůúĚŠČŘŽÝÁÍÉÚ"); // Add a string (here "Hello world" contains 7
-                                  // unique characters)
-  builder.AddRanges(
-      io.Fonts->GetGlyphRangesDefault()); // Add one of the default ranges
-  builder.BuildRanges(&ranges); // Build the final result (ordered ranges with
-                                // all the unique characters submitted)
+  builder.AddText(u8"áčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ"); // Přidáme řetězec
+  builder.AddRanges(io.Fonts->GetGlyphRangesDefault()); // Přidáme jednu z výchozích sad
+  builder.BuildRanges(&ranges); // Sestavíme výsledný výsledek (seřazené sady se
+                                // všemi jedinečnými znaky)
 
-  io.Fonts->AddFontFromFileTTF("../../res/OpenSans.ttf", 18.0f, nullptr,
-                               ranges.Data);
-  io.Fonts->Build(); // Build the atlas while 'ranges' is still in scope and not
-                     // deleted.
+  auto font =
+      io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 20, nullptr, ranges.Data);
+
+  if (font == nullptr) {
+    // Font se nepodařilo načíst, zobrazíme chybovou zprávu
+    Log::LogError("Nepodařilo se načíst font: " + std::string(fontPath));
+  } else {
+    // Font se načetl úspěšně, nastavíme ho jako výchozí
+    io.FontDefault = font;
+  }
 
   io.Fonts->Build();
   ImGui::StyleColorsDark();

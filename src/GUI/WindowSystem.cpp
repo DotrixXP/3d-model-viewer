@@ -23,8 +23,7 @@ const glm::mat4 InputData::GetModelMatrix() const {
   return scaleMatrix * model;
 }
 
-CameraSettings::CameraSettings() noexcept
-    : cameraType(0), projectionType(2) {}
+CameraSettings::CameraSettings() noexcept : cameraType(0), projectionType(2) {}
 
 WindowSystem::WindowSystem()
     : m_inputData(glm::vec3(2.f, 0.f, -5.f), glm::vec3(1.0f), glm::vec3(1.0f),
@@ -37,7 +36,6 @@ WindowSystem::WindowSystem()
 
 void WindowSystem::RenderWindows(bool isObjectRendered) {
   ImVec2 mainMenuBarSize = this->RenderMainMenuBar();
-
   ImVec2 screenSize = ImGui::GetIO().DisplaySize;
 
   ImGui::Begin("Viewport", nullptr,
@@ -97,6 +95,7 @@ void WindowSystem::RenderWindows(bool isObjectRendered) {
   if (!isObjectRendered)
     ImGui::EndDisabled();
 
+  ImGui::ShowMetricsWindow();
   ImGui::End();
 }
 
@@ -142,7 +141,8 @@ void WindowSystem::RenderClearColorPicker() {
 void WindowSystem::RenderModelInfo() {
   ImGui::Separator();
   ImGui::Text(u8"Model info");
-  ImGui::Text(u8"Počet vertexů: %d", Renderer::GetInstance().GetVerticesCount());
+  ImGui::Text(u8"Počet vertexů: %d",
+              Renderer::GetInstance().GetVerticesCount());
   ImGui::Text(u8"Počet indexů: %d", Renderer::GetInstance().GetIndicesCount());
   ImGui::Separator();
 }
@@ -173,7 +173,8 @@ void WindowSystem::RenderCameraSettings() {
   ImGui::Text(u8"Nastavení kamery");
   if (ImGui::RadioButton(u8"Freefly kamera", m_cameraSettings.cameraType == 1))
     m_cameraSettings.cameraType = 1;
-  if (ImGui::RadioButton(u8"Orbitální kamera", m_cameraSettings.cameraType == 0))
+  if (ImGui::RadioButton(u8"Orbitální kamera",
+                         m_cameraSettings.cameraType == 0))
     m_cameraSettings.cameraType = 0;
   if (m_cameraSettings.cameraType == 1) {
     ImGui::BeginDisabled();
@@ -192,7 +193,7 @@ void WindowSystem::RenderCameraSettings() {
   ImGui::Separator();
 }
 void WindowSystem::ApplyGuiData() {
-  
+
   CameraSystem::GetInstance().SetInputState(!m_renderGizmo);
 
   if (m_cameraSettings.projectionType == 2) {
