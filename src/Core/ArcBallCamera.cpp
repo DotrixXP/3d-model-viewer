@@ -33,15 +33,15 @@ void ArcBallCamera::ProcessMouseInput(float definedXPos, float definedYPos) {
 
     if (m_firstMouse) {
       m_lastXPos = definedXPos;
-      m_lastYPos = definedYPos;
+      m_lastYPos = -definedYPos;
       m_firstMouse = false;
     }
 
     float deltaX = definedXPos - m_lastXPos;
-    float deltaY = definedYPos - m_lastYPos;
+    float deltaY = -definedYPos - m_lastYPos;
 
     m_lastXPos = definedXPos;
-    m_lastYPos = definedYPos;
+    m_lastYPos = -definedYPos;
 
     RotateAzimuth(deltaX * m_rotationSpeed);
     RotatePolar(deltaY * m_rotationSpeed);

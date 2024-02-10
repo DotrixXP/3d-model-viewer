@@ -40,7 +40,7 @@ void WindowSystem::RenderWindows(bool isObjectRendered) {
 
   ImGui::Begin("Viewport", nullptr,
                ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-                   ImGuiWindowFlags_NoMove);
+                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
   ImGui::SetWindowSize(
       ImVec2(screenSize.x / 1.5, screenSize.y - mainMenuBarSize.y));
   ImGui::SetWindowPos(ImVec2(0, mainMenuBarSize.y));
@@ -95,7 +95,6 @@ void WindowSystem::RenderWindows(bool isObjectRendered) {
   if (!isObjectRendered)
     ImGui::EndDisabled();
 
-  ImGui::ShowMetricsWindow();
   ImGui::End();
 }
 
