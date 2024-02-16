@@ -146,6 +146,48 @@ void WindowSystem::RenderModelInfo() {
   ImGui::Separator();
 }
 
+const std::optional<std::string>
+WindowSystem::RenderTexturesDialog(std::vector<std::string> textures) {
+  std::optional<std::string> clickedTexture = std::nullopt;
+
+  ImGui::Begin(u8"Automatické hledání textur");
+  ImGui::Text(u8"Textury");
+
+  for (auto &texture : textures) {
+    if (ImGui::Selectable(texture.c_str())) {
+      clickedTexture = texture;
+    }
+  }
+
+  ImGui::Separator();
+  ImGui::Text(u8"Nebo vyberte texturu ručně");
+  if (ImGui::Button(u8"Vybrat texturu")) {
+    clickedTexture = FileDialogManager::GetInstance().InvokeFileDialog();
+  }
+  ImGui::Separator();
+  ImGui::Text(u8"Nebo vyberte barvu modelu");
+  if (ImGui::Button(u8"Vybrat barvu")) {
+    clickedTexture = std::string("");
+  }
+
+  ImGui::End();
+
+  return clickedTexture;
+}
+
+const std::optional<glm::vec3> WindowSystem::RenderModelColorPicker() {
+  ImGui::Begin(u8"Barva modelu");
+  static ImVec4 color = ImVec4(1.f, 1.f, 1.f, 1.f);
+  ImGui::ColorEdit3(u8"Barva modelu", (float *)&color);
+
+  if (ImGui::Button(u8"Potvrdit")) {
+    ImGui::End();
+    return glm::vec3(color.x, color.y, color.z);
+  }
+  ImGui::End();
+  return std::nullopt;
+}
+
 void WindowSystem::RenderGizmoSettings() {
   ImGui::Text(u8"Nastavení gizma");
   ImGui::Checkbox(u8"Zobrazit gizmo", &m_renderGizmo);

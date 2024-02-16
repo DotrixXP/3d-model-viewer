@@ -81,15 +81,19 @@ void Core::StartRenderingToTexture(glm::vec2 viewportSize) {
 }
 
 GLuint Core::GetRenderTargetTexture() { return s_render_target_texture; }
+
 GLuint Core::GetRenderTargetFramebuffer() {
   return s_render_target_framebuffer;
 };
+
 void Core::FinishRenderingToTexture() {
-  auto windowSize = glm::vec2(Window::GetWindowWidth(), Window::GetWindowHeight());
+  auto windowSize =
+      glm::vec2(Window::GetWindowWidth(), Window::GetWindowHeight());
   glViewport(0, 0, windowSize.x, windowSize.y);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   Core::ClearBuffers(true);
 }
+
 void Core::UpdateVariables() { ImguiRendering::UpdateImgui(); }
 
 void Core::ClearBuffers(bool blackBackground) {

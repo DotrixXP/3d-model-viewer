@@ -4,7 +4,7 @@ Model::Model(const std::string &directoryPath, bool manualySetTextures) {
   m_directoryPath = directoryPath;
   m_manualySetTextures = manualySetTextures;
   Model::LoadModel(directoryPath);
-
+  m_color = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
   m_model = glm::mat4(1.f);
 }
 
@@ -36,6 +36,8 @@ void Model::LoadModel(std::string directoryPath) {
 
   Model::ProcessNode(scene->mRootNode, scene);
 }
+
+const glm::vec4 Model::GetColor() const { return m_color; }
 
 void Model::ProcessNode(aiNode *node, const aiScene *scene) {
   //  zpracování všech meshů ve scéně
@@ -88,8 +90,7 @@ Mesh Model::ProcessMesh(aiMesh *mesh,
     } else
       vertex.texCoords =
           glm::vec2(0.0f, 0.0f); // Pokud nejsou souřadnice, tak 0,0
-
-    vertices.push_back(vertex); // Uložit získané vertexy do vectoru
+        vertices.push_back(vertex); // Uložit získané vertexy do vectoru
   }
 
   // získání indices
@@ -120,13 +121,17 @@ Mesh Model::ProcessMesh(aiMesh *mesh,
               textures); // Vrátí celý jeden Mesh
 }
 
-
-
 void Model::OverwriteTexture(uint32_t texture) {
   m_loadedTextures.clear();
   m_loadedTexturesPaths.clear();
   m_loadedTextures.push_back({texture, "diffuse"});
   m_manualySetTextures = true;
+}
+
+const std::string &Model::GetDirectoryPath() const { return m_directoryPath; }
+
+void Model::OverwriteColor(glm::vec3 color){
+  m_color = glm::vec4(color, 1.0f);
 }
 
 const uint32_t Model::GetVerticesCount() const {

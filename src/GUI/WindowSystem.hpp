@@ -1,12 +1,13 @@
 #pragma once
 #include "../Core/Core.hpp"
+#include "../Core/Window.hpp"
 #include "../Tools/FileDialog.hpp"
 #include "ImGuizmo.h"
 #include "imgui.h"
 #include <cstdint>
 #include <filesystem>
 #include <optional>
-#include "../Core/Window.hpp"
+#include <vector>
 
 struct InputData {
 private:
@@ -40,13 +41,16 @@ public:
   void ApplyGuiData();
   static const glm::vec2 GetViewportWinSize();
   static std::optional<std::filesystem::path> s_modelPath;
-
+  static const std::optional<std::string>
+  RenderTexturesDialog(std::vector<std::string> textures);
+  static const std::optional<glm::vec3> RenderModelColorPicker();
 private:
   static glm::vec2 s_viewportWinSize;
   inline void RenderPositionsWidgets();
   inline void RenderClearColorPicker();
   inline void RenderModelInfo();
   inline void RenderCameraSettings();
+
   inline ImVec2 RenderMainMenuBar();
   inline void OpenModelSelectionDialog();
   inline void RenderGizmoSettings();
