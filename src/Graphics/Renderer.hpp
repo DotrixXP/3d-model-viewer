@@ -9,6 +9,8 @@ class Renderer
     static Renderer &GetInstance();
     const uint32_t GetVerticesCount() const;
     const uint32_t GetIndicesCount() const;
+    void ReloadShaders();
+    Shader &GetShader();
 
   private:
     uint32_t m_verticesCount;
@@ -16,5 +18,5 @@ class Renderer
 
     Shader m_shader;
     Renderer();
-    ~Renderer();
+    ~Renderer() = default;
 };

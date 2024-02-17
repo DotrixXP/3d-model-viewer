@@ -103,12 +103,50 @@ void WindowSystem::RenderWindows(bool isObjectRendered)
     if (!isObjectRendered)
         ImGui::EndDisabled();
 
+    RenderModelErrorWindow();
+
     ImGui::End();
 }
 
 void WindowSystem::OpenModelSelectionDialog()
 {
-    s_modelPath = FileDialogManager::GetInstance().InvokeFileDialog();
+    auto path = FileDialogManager::GetInstance().InvokeFileDialog();
+
+    std::filesystem::path modelPath = path;
+    std::string extension = modelPath.extension().string();
+
+    if (std::find(SUPPORTED_MODEL_EXTENSIONS.begin(),
+                  SUPPORTED_MODEL_EXTENSIONS.end(),
+                  extension) != SUPPORTED_MODEL_EXTENSIONS.end())
+    {
+        s_modelPath = path;
+    }
+    else
+    {
+        m_showModelErrorWindow = true;
+        Log::LogInfo("Nebyl vybraný 3D model");
+    }
+}
+
+void WindowSystem::RenderModelErrorWindow()
+{
+    if (m_showModelErrorWindow)
+    {
+        ImGui::OpenPopup("Nebyl vybraný 3D model");
+        if (ImGui::BeginPopupModal("Nebyl vybraný 3D model", NULL,
+                                   ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::Text("Vybraný soubor nemá známou příponu 3D modelu\n\n");
+            ImGui::Separator();
+
+            if (ImGui::Button("OK", ImVec2(120, 0)))
+            {
+                m_showModelErrorWindow = false;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+    }
 }
 
 ImVec2 WindowSystem::RenderMainMenuBar()
@@ -121,14 +159,14 @@ ImVec2 WindowSystem::RenderMainMenuBar()
 
         if (ImGui::BeginMenu("Soubor"))
         {
-            if (ImGui::MenuItem(u8"Otevřít", "Ctrl+O"))
+            if (ImGui::MenuItem(u8"Otevřít"))
             {
                 WindowSystem::OpenModelSelectionDialog();
             }
 
-            if (ImGui::MenuItem(u8"Zavřít", "Ctrl+W"))
-            {                            // TODO: Funkce pro zavreni aplikace
-                Window::DestroyWindow(); // TODO: Hází výjímku - vyřešit
+            if (ImGui::MenuItem(u8"Zavřít"))
+            {
+                exit(0);
             }
             ImGui::EndMenu();
         }

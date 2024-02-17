@@ -18,10 +18,12 @@ class ModelLoader
     uint32_t m_texture;
     USER_INPUT m_waitingForUserInput = NO_INPUT;
     std::vector<std::string> m_texturePaths;
+    std::string m_texturePath;
+    std::string m_modelPath;
 
   public:
     ModelLoader();
-    ~ModelLoader() = default;
+    ~ModelLoader();
     void LoadSelectedModel();
     void RenderSelectedModel(InputData inputData);
     bool IsModelLoaded();

@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <optional>
 #include <vector>
+#include "../constants.hpp"
 
 struct InputData
 {
@@ -54,7 +55,7 @@ class WindowSystem
     inline void RenderClearColorPicker();
     inline void RenderModelInfo();
     inline void RenderCameraSettings();
-
+    inline void RenderModelErrorWindow();
     inline ImVec2 RenderMainMenuBar();
     inline void OpenModelSelectionDialog();
     inline void RenderGizmoSettings();
@@ -63,4 +64,5 @@ class WindowSystem
     ImGuizmo::OPERATION m_gizmoOperation;
     bool m_renderGizmo;
     float m_gizmoSizeMultiplier;
+    bool m_showModelErrorWindow = false;
 };

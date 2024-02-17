@@ -13,8 +13,8 @@ const void Model::DrawArrays(Shader &shader) const
 {
     if (m_manualySetTextures)
     {
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, m_loadedTextures[0].id);
+        // glActiveTexture(GL_TEXTURE1);
+        // glBindTexture(GL_TEXTURE_2D, m_loadedTextures[0].id);
     }
     for (uint32_t i = 0; i < m_meshes.size();
          i++) // Každý mesh ve vectoru vykreslit

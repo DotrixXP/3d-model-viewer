@@ -87,7 +87,6 @@ uint32_t Shader::CompileShader(uint32_t type, const std::string &shaderPath)
 uint32_t Shader::GetShaderProgram() { return m_shaderProgram; }
 
 // Nastavování veškerých uniformů
-//
 void Shader::SetUniform(std::string uniformName, int uniformData)
 {
     glUseProgram(m_shaderProgram);

@@ -30,4 +30,5 @@ Renderer::Renderer()
                (std::string(GLOBAL_PATH) + "res/basic.vert").c_str())
 {
 }
-Renderer::~Renderer() {}
+
+Shader &Renderer::GetShader() { return m_shader; }

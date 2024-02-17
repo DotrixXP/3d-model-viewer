@@ -23,7 +23,7 @@ inline void ViewerApp::Run()
 {
     Window::InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "3D Model Viewer");
     Window::SetVsync(true);
-    GLDebug::EnableDebugMode();
+    // GLDebug::EnableDebugMode();
     OpenglData::SetFaceCulling(false);
     OpenglData::SetDepthTesting(true);
     WindowSystem windowsSystem;
