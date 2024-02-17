@@ -1,10 +1,11 @@
-#pragma once
-#include <nfd.h>
+﻿#pragma once
 #include "Log.hpp"
 #include <memory>
+#include <nfd.h>
 
-class FileDialogManager {
-public:
+class FileDialogManager
+{
+  public:
     static void Init();
     static FileDialogManager &GetInstance();
     FileDialogManager(FileDialogManager const &) = delete;
@@ -12,7 +13,8 @@ public:
 
     ~FileDialogManager();
     const std::string InvokeFileDialog();
-private:
+
+  private:
     static std::unique_ptr<FileDialogManager> s_instance;
     FileDialogManager();
 };
