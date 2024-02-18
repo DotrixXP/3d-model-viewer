@@ -2,7 +2,7 @@
 
 CameraSystem::CameraSystem() noexcept
     : m_activeCamera(Cameras::STATIC), m_fpsCamera(70.f, 0.1f, 10.f),
-      m_orbitalCamera(), m_inputState(false)
+      m_orbitalCamera(), m_inputState(false), m_zoomMultiplier(1.0f)
 {
 }
 
@@ -46,6 +46,11 @@ void CameraSystem::SetActiveCamera(Cameras camera) { m_activeCamera = camera; }
 
 Cameras CameraSystem::GetActiveCameraType() { return m_activeCamera; }
 
+void CameraSystem::SetZoomMultiplier(float zoomMultiplier)
+{
+    m_zoomMultiplier = zoomMultiplier;
+}
+
 void CameraSystem::ProcessMouseScrollInput(const float definedXOffset,
                                            const float definedYOffset)
 {
@@ -60,7 +65,7 @@ void CameraSystem::ProcessMouseScrollInput(const float definedXOffset,
     }
     else
     {
-        m_orbitalCamera.Zoom(definedYOffset);
+        m_orbitalCamera.Zoom(definedYOffset * m_zoomMultiplier);
     }
 }
 

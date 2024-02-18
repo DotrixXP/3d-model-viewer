@@ -5,19 +5,12 @@ ModelLoader::ModelLoader()
     m_model = nullptr;
     m_texturePaths = std::vector<std::string>();
     m_texture = 0;
-    m_texturePath = "";
-    m_modelPath = "";
 }
 
 void ModelLoader::LoadSelectedModel()
 {
     if (WindowSystem::s_modelPath.has_value())
     {
-        if(m_modelPath == WindowSystem::s_modelPath.value().string())
-        {
-            // return;
-        }
-
         if (m_model != nullptr)
         {
             m_texturePaths.clear();
@@ -28,8 +21,6 @@ void ModelLoader::LoadSelectedModel()
 
         m_model =
             std::make_unique<Model>(WindowSystem::s_modelPath.value().string());
-        m_modelPath = WindowSystem::s_modelPath.value().string();
-
         try
         {
             m_texturePaths =
@@ -53,36 +44,30 @@ void ModelLoader::RenderSelectedModel(InputData inputData)
     {
         selectedTexturePath =
             WindowSystem::RenderTexturesDialog(m_texturePaths);
+        // Kontrola, zda všechny cesty obsahují podporovanou příponu textur
+
         if (selectedTexturePath.has_value())
         {
-            if (m_texturePath != selectedTexturePath.value())
+            if (selectedTexturePath.value() != "")
             {
-                if (selectedTexturePath.value() != "")
+                if (m_texture == 0)
                 {
-                    if (m_texture == 0)
-                    {
-                        m_texture = loadTexture(
-                            selectedTexturePath.value().c_str(), GL_LINEAR);
-                        m_texturePath = selectedTexturePath.value();
-                    }
-                    else
-                    {
-                        updateTexture(m_texture,
-                                      selectedTexturePath.value().c_str());
-                        m_texturePath = selectedTexturePath.value();
-                    }
-
-                    std::cout << "Texture loaded: " << m_texture << std::endl;
-                    m_waitingForUserInput = NO_INPUT;
+                    m_texture =
+                        loadTexture(selectedTexturePath.value().c_str(),
+                                    GL_LINEAR, WindowSystem::s_flipTexture);
                 }
                 else
                 {
-                    m_waitingForUserInput = COLOR_SELECTION;
+                    updateTexture(m_texture,
+                                  selectedTexturePath.value().c_str(),
+                                  WindowSystem::s_flipTexture);
                 }
+
+                m_waitingForUserInput = NO_INPUT;
             }
             else
             {
-                m_waitingForUserInput = NO_INPUT;
+                m_waitingForUserInput = COLOR_SELECTION;
             }
         }
     }
@@ -133,12 +118,10 @@ ModelLoader::FindTexture(const std::string modelPath) const
         if (dir->is_regular_file())
         {
             std::string extension = dir->path().extension().string();
-            if (extension == ".png" || extension == ".jpg" ||
-                extension == ".jpeg" || extension == ".tga" ||
-                extension == ".bmp")
+            if (std::find(SUPPORTED_TEXTURE_EXTENSIONS.begin(),
+                          SUPPORTED_TEXTURE_EXTENSIONS.end(),
+                          extension) != SUPPORTED_TEXTURE_EXTENSIONS.end())
             {
-                std::cout << "Texture found: " << dir->path().string()
-                          << std::endl;
                 textures.push_back(dir->path().string());
             }
         }

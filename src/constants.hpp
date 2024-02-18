@@ -11,3 +11,6 @@ const std::vector<std::string> SUPPORTED_MODEL_EXTENSIONS = {
     ".ply",  ".pmx",   ".prj",  ".q3o",  ".q3s", ".raw", ".scn",     ".sib",
     ".smd",  ".stp",   ".stl",  ".ter",  ".uc",  ".vta", ".x",       ".x3d",
     ".xgl",  ".zgl"};
+
+const std::vector<std::string> SUPPORTED_TEXTURE_EXTENSIONS = {
+    ".bmp", ".gif", ".hdr", ".jpg", ".pic", ".png", ".psd", ".pnm"};

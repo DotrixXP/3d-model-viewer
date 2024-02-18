@@ -205,7 +205,7 @@ std::vector<MeshData::Texture> Model::LoadMaterialTextures(aiMaterial *mat,
         MeshData::Texture texture;
         m_loadedTexturesPaths.push_back(str.C_Str());
 
-        texture.id = loadTexture(filename, GL_LINEAR);
+        texture.id = loadTexture(filename, GL_LINEAR, true);
         texture.type = typeName;
 
         texturesToReturn.push_back(texture);

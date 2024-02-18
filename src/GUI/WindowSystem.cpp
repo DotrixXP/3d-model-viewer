@@ -5,6 +5,9 @@
 
 glm::vec2 WindowSystem::s_viewportWinSize = glm::vec2(-1.0f);
 std::optional<std::filesystem::path> WindowSystem::s_modelPath = std::nullopt;
+bool WindowSystem::s_flipTexture = false;
+bool WindowSystem::s_showTextureErrorWindow = false;
+bool WindowSystem::s_showModelErrorWindow = false;
 
 InputData::InputData(glm::vec3 modelPos, glm::vec3 modelRot,
                      glm::vec3 modelScale, float modelRotAngle)
@@ -25,7 +28,10 @@ const glm::mat4 InputData::GetModelMatrix() const
     return scaleMatrix * model;
 }
 
-CameraSettings::CameraSettings() noexcept : cameraType(0), projectionType(2) {}
+CameraSettings::CameraSettings() noexcept
+    : cameraType(0), projectionType(2), zoomMultiplier(1.f)
+{
+}
 
 WindowSystem::WindowSystem()
     : m_inputData(glm::vec3(2.f, 0.f, -5.f), glm::vec3(1.0f), glm::vec3(1.0f),
@@ -44,7 +50,9 @@ void WindowSystem::RenderWindows(bool isObjectRendered)
 
     ImGui::Begin("Viewport", nullptr,
                  ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-                     ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
+                     ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
+                     ImGuiWindowFlags_NoScrollWithMouse |
+                     ImGuiWindowFlags_NoBringToFrontOnFocus);
     ImGui::SetWindowSize(
         ImVec2(screenSize.x / 1.5, screenSize.y - mainMenuBarSize.y));
     ImGui::SetWindowPos(ImVec2(0, mainMenuBarSize.y));
@@ -86,7 +94,8 @@ void WindowSystem::RenderWindows(bool isObjectRendered)
 
     ImGui::Begin("Vlastnosti", nullptr,
                  ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-                     ImGuiWindowFlags_NoMove);
+                     ImGuiWindowFlags_NoMove |
+                     ImGuiWindowFlags_NoBringToFrontOnFocus);
 
     ImGui::SetWindowSize(ImVec2(screenSize.x - screenSize.x / 1.5,
                                 screenSize.y - mainMenuBarSize.y));
@@ -104,7 +113,7 @@ void WindowSystem::RenderWindows(bool isObjectRendered)
         ImGui::EndDisabled();
 
     RenderModelErrorWindow();
-
+    RenderTextureErrorWindow();
     ImGui::End();
 }
 
@@ -123,25 +132,50 @@ void WindowSystem::OpenModelSelectionDialog()
     }
     else
     {
-        m_showModelErrorWindow = true;
+        s_showModelErrorWindow = true;
         Log::LogInfo("Nebyl vybraný 3D model");
     }
 }
 
 void WindowSystem::RenderModelErrorWindow()
 {
-    if (m_showModelErrorWindow)
+    if (s_showModelErrorWindow)
     {
         ImGui::OpenPopup("Nebyl vybraný 3D model");
-        if (ImGui::BeginPopupModal("Nebyl vybraný 3D model", NULL,
-                                   ImGuiWindowFlags_AlwaysAutoResize))
+        if (ImGui::BeginPopupModal("Nebyl vybraný 3D model", nullptr,
+                                   ImGuiWindowFlags_AlwaysAutoResize |
+                                       ImGuiWindowFlags_NoCollapse))
         {
             ImGui::Text("Vybraný soubor nemá známou příponu 3D modelu\n\n");
             ImGui::Separator();
 
             if (ImGui::Button("OK", ImVec2(120, 0)))
             {
-                m_showModelErrorWindow = false;
+                s_showModelErrorWindow = false;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+    }
+}
+
+void WindowSystem::RenderTextureErrorWindow()
+{
+    if (s_showTextureErrorWindow)
+    {
+        ImGui::OpenPopup("Nebyla vybráný podporovaný formát textury");
+        if (ImGui::BeginPopupModal("Nebyla vybráný podporovaný formát textury",
+                                   nullptr,
+                                   ImGuiWindowFlags_AlwaysAutoResize |
+                                       ImGuiWindowFlags_NoCollapse))
+        {
+            ImGui::Text(
+                "Vybraný soubor nemá známou/podporovanou příponu textury\n\n");
+            ImGui::Separator();
+
+            if (ImGui::Button("OK", ImVec2(120, 0)))
+            {
+                s_showTextureErrorWindow = false;
                 ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();
@@ -204,9 +238,16 @@ void WindowSystem::RenderModelInfo()
 const std::optional<std::string>
 WindowSystem::RenderTexturesDialog(std::vector<std::string> textures)
 {
+    if (s_showTextureErrorWindow)
+    {
+        return std::nullopt;
+    }
+
     std::optional<std::string> clickedTexture = std::nullopt;
 
-    ImGui::Begin(u8"Automatické hledání textur");
+    ImGui::Begin(u8"Automatické hledání textur", nullptr,
+                 ImGuiWindowFlags_AlwaysAutoResize |
+                     ImGuiWindowFlags_NoCollapse);
     ImGui::Text(u8"Textury");
 
     for (auto &texture : textures)
@@ -219,12 +260,30 @@ WindowSystem::RenderTexturesDialog(std::vector<std::string> textures)
 
     ImGui::Separator();
     ImGui::Text(u8"Nebo vyberte texturu ručně");
+    ImGui::Checkbox(u8"Obrátit texturu", &s_flipTexture);
     if (ImGui::Button(u8"Vybrat texturu"))
     {
-        clickedTexture = FileDialogManager::GetInstance().InvokeFileDialog();
+        auto texture = FileDialogManager::GetInstance().InvokeFileDialog();
+        std::string extension =
+            std::filesystem::path(texture).extension().string();
+        if (std::find(SUPPORTED_TEXTURE_EXTENSIONS.begin(),
+                      SUPPORTED_TEXTURE_EXTENSIONS.end(),
+                      extension) == SUPPORTED_TEXTURE_EXTENSIONS.end())
+        {
+            Log::LogError("Nepodporovaný formát textury:" + texture);
+            s_showTextureErrorWindow = true;
+            ImGui::End();
+            return std::nullopt;
+        }
+        else
+        {
+            clickedTexture = texture;
+        }
     }
+
     ImGui::Separator();
     ImGui::Text(u8"Nebo vyberte barvu modelu");
+
     if (ImGui::Button(u8"Vybrat barvu"))
     {
         clickedTexture = std::string("");
@@ -237,7 +296,9 @@ WindowSystem::RenderTexturesDialog(std::vector<std::string> textures)
 
 const std::optional<glm::vec3> WindowSystem::RenderModelColorPicker()
 {
-    ImGui::Begin(u8"Barva modelu");
+    ImGui::Begin(u8"Barva modelu", nullptr,
+                 ImGuiWindowFlags_AlwaysAutoResize |
+                     ImGuiWindowFlags_NoCollapse);
     static ImVec4 color = ImVec4(1.f, 1.f, 1.f, 1.f);
     ImGui::ColorEdit3(u8"Barva modelu", (float *)&color);
 
@@ -295,6 +356,13 @@ void WindowSystem::RenderCameraSettings()
     if (ImGui::RadioButton(u8"Ortogonální projekce",
                            m_cameraSettings.projectionType == 3))
         m_cameraSettings.projectionType = 3;
+
+    if (m_cameraSettings.projectionType != 2)
+        ImGui::BeginDisabled();
+    ImGui::SliderFloat(u8"Zoom", &m_cameraSettings.zoomMultiplier, 0.1f, 10.0f);
+    if (m_cameraSettings.projectionType != 2)
+        ImGui::EndDisabled();
+
     if (m_cameraSettings.cameraType == 1)
     {
         ImGui::EndDisabled();
@@ -324,6 +392,9 @@ void WindowSystem::ApplyGuiData()
     {
         CameraSystem::GetInstance().SetActiveCamera(Cameras::FIRST_PERSON);
     }
+
+    CameraSystem::GetInstance().SetZoomMultiplier(
+        m_cameraSettings.zoomMultiplier);
 }
 
 const glm::vec2 WindowSystem::GetViewportWinSize() { return s_viewportWinSize; }

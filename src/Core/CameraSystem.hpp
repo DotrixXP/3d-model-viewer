@@ -32,13 +32,13 @@ class CameraSystem
     CameraSystem(CameraSystem &&) = delete;
     CameraSystem &operator=(CameraSystem &&) = delete;
     void SetInputState(bool state);
-
+    void SetZoomMultiplier(float zoomMultiplier);
   private:
     CameraSystem() noexcept;
     ~CameraSystem() = default;
 
     Cameras m_activeCamera;
-
+    float m_zoomMultiplier;
     FpsCamera m_fpsCamera;
     ArcBallCamera m_orbitalCamera;
     bool m_inputState;

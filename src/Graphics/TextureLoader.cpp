@@ -1,6 +1,6 @@
 ﻿#include "TextureLoader.hpp"
 
-uint32_t loadTexture(const std::string &directoryPath, uint32_t filtering)
+uint32_t loadTexture(const std::string &directoryPath, uint32_t filtering, bool flipTexture)
 {
     uint32_t m_textureID;
     glGenTextures(1, &m_textureID);
@@ -9,8 +9,8 @@ uint32_t loadTexture(const std::string &directoryPath, uint32_t filtering)
 
     unsigned char *data = nullptr;
 
+    stbi_set_flip_vertically_on_load(flipTexture);
     data = stbi_load(directoryPath.c_str(), &width, &height, &colorChannels, 0);
-    stbi_set_flip_vertically_on_load(true);
     if (data)
     {
         GLenum format = 3;
@@ -58,21 +58,19 @@ uint32_t loadTexture(const std::string &directoryPath, uint32_t filtering)
     else
     {
         Log::LogError("Chyba! Textura: " + directoryPath + " nebyla nactena!");
-        throw std::runtime_error("Chyba! Textura: " + directoryPath +
-                                 " nebyla nactena!");
         stbi_image_free(data);
     }
     return m_textureID;
 }
 
-void updateTexture(uint32_t textureID, const std::string &directoryPath)
+void updateTexture(uint32_t textureID, const std::string &directoryPath, bool flipTexture)
 {
     int width, height, colorChannels;
 
     unsigned char *data = nullptr;
 
+    stbi_set_flip_vertically_on_load(flipTexture);
     data = stbi_load(directoryPath.c_str(), &width, &height, &colorChannels, 0);
-    stbi_set_flip_vertically_on_load(true);
     if (data)
     {
         GLenum format = 3;

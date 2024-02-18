@@ -33,6 +33,7 @@ struct CameraSettings
 {
     int cameraType;
     int projectionType;
+    float zoomMultiplier;
     CameraSettings() noexcept;
 };
 
@@ -45,6 +46,7 @@ class WindowSystem
     void ApplyGuiData();
     static const glm::vec2 GetViewportWinSize();
     static std::optional<std::filesystem::path> s_modelPath;
+    static bool s_flipTexture;
     static const std::optional<std::string>
     RenderTexturesDialog(std::vector<std::string> textures);
     static const std::optional<glm::vec3> RenderModelColorPicker();
@@ -56,6 +58,7 @@ class WindowSystem
     inline void RenderModelInfo();
     inline void RenderCameraSettings();
     inline void RenderModelErrorWindow();
+    inline void RenderTextureErrorWindow();
     inline ImVec2 RenderMainMenuBar();
     inline void OpenModelSelectionDialog();
     inline void RenderGizmoSettings();
@@ -64,5 +67,6 @@ class WindowSystem
     ImGuizmo::OPERATION m_gizmoOperation;
     bool m_renderGizmo;
     float m_gizmoSizeMultiplier;
-    bool m_showModelErrorWindow = false;
+    static bool s_showModelErrorWindow;
+    static bool s_showTextureErrorWindow;
 };
