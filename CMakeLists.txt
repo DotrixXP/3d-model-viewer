@@ -89,6 +89,7 @@ add_executable(3DViewer ${SOURCES})
 if(WIN32) # Pokud je operační systém Windows
     set(CMAKE_C_COMPILER "cl")
     set(CMAKE_CXX_COMPILER "cl")
+    set_target_properties(3DViewer PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
     target_link_libraries(3DViewer glad imgui imguizmo glfw assimp nfd)
 elseif(UNIX AND NOT APPLE) # Pokud je operační systém Linux
     set(CMAKE_C_COMPILER "clang")
@@ -100,3 +101,4 @@ elseif(UNIX AND NOT APPLE) # Pokud je operační systém Linux
 	endif()
 	target_link_libraries(3DViewer PUBLIC glad glfw imgui imguizmo assimp pthread nfd)
 endif()
+

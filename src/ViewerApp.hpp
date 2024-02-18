@@ -23,7 +23,7 @@ inline void ViewerApp::Run()
 {
     Window::InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "3D Model Viewer");
     Window::SetVsync(true);
-    // GLDebug::EnableDebugMode();
+    GLDebug::EnableDebugMode();
     OpenglData::SetFaceCulling(false);
     OpenglData::SetDepthTesting(true);
     WindowSystem windowsSystem;
@@ -34,7 +34,6 @@ inline void ViewerApp::Run()
     {
         auto inputData = windowsSystem.GetInputData();
         Core::OnRenderStart();
-
         Core::StartRenderingToTexture(windowsSystem.GetViewportWinSize());
         CameraSystem::GetInstance().UpdateInput();
         modelLoader.LoadSelectedModel();

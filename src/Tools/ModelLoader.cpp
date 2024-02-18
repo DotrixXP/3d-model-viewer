@@ -15,7 +15,7 @@ void ModelLoader::LoadSelectedModel()
     {
         if(m_modelPath == WindowSystem::s_modelPath.value().string())
         {
-            return;
+            // return;
         }
 
         if (m_model != nullptr)
