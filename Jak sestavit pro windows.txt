@@ -1,11 +1,3 @@
 Pro sestavení na Windows pomocí MSVC je potřeba cmake a Visual Studio. CMake binární soubor musí být v Path pro funkčnost skriptu generate_vs_sollution_win.bat. Skript generuje řešení pro visual studio. -> Vytvoří složku a potom zavolá příkaz cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
 Po otevření řešení stačí jen vybrat konfiguraci a řešení sestavit.
 
-!!! Je potřeba pro kompilaci změnit cesty k shaderům a k testovacímu 3D modelu. !!!
-Tyto cesty jsou v souboru
-ViewerApp.cpp ->
-29: Model backpack("res/backpack/backpack.obj");
-31: uint32_t texture = loadTexture("res/backpack/diffuse.jpg", GL_LINEAR);
-
-Renderer.cpp ->  33: Renderer::Renderer()
-    34: : m_shader(Shader("shaders/basic.frag", "shaders/basic.vert")),
