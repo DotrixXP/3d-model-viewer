@@ -1,5 +1,6 @@
 ﻿#include "WindowSystem.hpp"
 #include "../Graphics/Renderer.hpp"
+#include "ErrorWindow.hpp"
 #include "ImGuizmo.h"
 #include "imgui.h"
 #include "GuiStyle.hpp"
@@ -8,7 +9,7 @@
 #include <variant>
 
 glm::vec2 WindowSystem::s_viewportWinSize = glm::vec2(-1.0f);
-std::optional<std::filesystem::path> WindowSystem::s_modelPath = std::nullopt;
+std::optional<std::filesystem::path> WindowSystem::s_newModelPath = std::nullopt;
 bool WindowSystem::s_flipTexture = false;
 bool WindowSystem::s_showTextureErrorWindow = false;
 bool WindowSystem::s_showModelErrorWindow = false;
@@ -73,6 +74,9 @@ void WindowSystem::RenderApplicationSettings() {
 }
 
 void WindowSystem::RenderWindows(bool isObjectRendered) {
+    if (GuiErrorWindow::s_open)
+        ImGui::BeginDisabled();
+
     ImVec2 mainMenuBarSize = this->RenderMainMenuBar(isObjectRendered);
     ImVec2 screenSize = ImGui::GetIO().DisplaySize;
     ImGui::Begin(Locale::GetText(LocaleKey::VIEWPORT),
@@ -154,8 +158,9 @@ void WindowSystem::RenderWindows(bool isObjectRendered) {
         ImGui::BeginDisabled();
 
     RenderClearColorPicker();
+    RenderRendererWidgets();
     RenderModelInfo();
-    ImGui::Checkbox(Locale::GetText(LocaleKey::WIREFRAME_MODE), &m_inputData.m_wireframeMode);
+
     ImGui::Separator();
     if (m_renderGizmo)
         ImGui::BeginDisabled();
@@ -176,6 +181,25 @@ void WindowSystem::RenderWindows(bool isObjectRendered) {
     if (s_showApplicationSettings) {
         RenderApplicationSettings();
     }
+
+    if (GuiErrorWindow::s_open)
+        ImGui::EndDisabled();
+
+    m_exportWindow.Render();
+
+    GuiErrorWindow::Render();
+}
+
+void WindowSystem::RenderRendererWidgets() {
+    if (ImGui::RadioButton("Fill", m_inputData.m_polygonMode == PolygonMode::FILL)) {
+        m_inputData.m_polygonMode = PolygonMode::FILL;
+    }
+    if (ImGui::RadioButton("Wireframe", m_inputData.m_polygonMode == PolygonMode::LINE)) {
+        m_inputData.m_polygonMode = PolygonMode::LINE;
+    }
+    if (ImGui::RadioButton("Points", m_inputData.m_polygonMode == PolygonMode::POINT)) {
+        m_inputData.m_polygonMode = PolygonMode::POINT;
+    }
 }
 
 void WindowSystem::OpenModelSelectionDialog() {
@@ -191,7 +215,7 @@ void WindowSystem::OpenModelSelectionDialog() {
 
     if (std::find(SUPPORTED_MODEL_EXTENSIONS.begin(), SUPPORTED_MODEL_EXTENSIONS.end(), extension)
         != SUPPORTED_MODEL_EXTENSIONS.end()) {
-        s_modelPath = path;
+        s_newModelPath = path;
     }
     else {
         s_showModelErrorWindow = true;
@@ -324,6 +348,16 @@ ImVec2 WindowSystem::RenderMainMenuBar(bool isObjectRendered) {
         if (!isObjectRendered)
             ImGui::BeginDisabled();
 
+        if (ImGui::Button("Export Model")) {
+            m_exportWindow.m_open = true;
+        }
+
+        if (!isObjectRendered)
+            ImGui::EndDisabled();
+
+        if (!isObjectRendered)
+            ImGui::BeginDisabled();
+
         if (!isObjectRendered)
             ImGui::EndDisabled();
 
@@ -355,16 +389,6 @@ void WindowSystem::RenderModelInfo() {
     ImGui::Separator();
 }
 
-MaterialSelection::MaterialSelection(std::variant<std::string, glm::vec3> diffuse,
-                                     std::optional<std::string> specular) {
-    this->diffuse = std::move(diffuse);
-    this->specular = std::move(specular);
-}
-
-MaterialSelection::MaterialSelection()
-    : diffuse(std::nullopt)
-    , specular(std::nullopt) {}
-
 bool WindowSystem::RenderMaterialDialog(MaterialSelection& materialSelection,
                                         std::vector<std::string>& textures) {
     if (s_showTextureErrorWindow) {
@@ -376,7 +400,7 @@ bool WindowSystem::RenderMaterialDialog(MaterialSelection& materialSelection,
 
     ImGui::Begin(Locale::GetText(LocaleKey::AUTOMATIC_TEXTURE_SELECTION),
                  nullptr,
-                 ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
+                 ImGuiWindowFlags_NoCollapse);
 
     static ImVec4 color = ImVec4(1.f, 1.f, 1.f, 1.f);
     if (ImGui::BeginTabBar("MaterialTabs")) {
@@ -396,6 +420,8 @@ bool WindowSystem::RenderMaterialDialog(MaterialSelection& materialSelection,
             if (s_isDiffuseTexture == 0)
                 ImGui::BeginDisabled();
 
+            ImGui::BeginChild(
+                "DiffuseTextures", ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 10), true);
             for (auto& texture : textures) {
                 bool isSelected
                     = materialSelection.diffuse.has_value()
@@ -404,12 +430,13 @@ bool WindowSystem::RenderMaterialDialog(MaterialSelection& materialSelection,
 
                 if (ImGui::Selectable((texture + " -> Diffuse").c_str(), isSelected)) {
                     materialSelection.diffuse = texture;
-                    Log::Info("Diffuse textura: " + texture);
+                    Log::Info("Diffuse texture: " + texture);
                 }
                 if (isSelected) {
                     ImGui::SetItemDefaultFocus();
                 }
             }
+            ImGui::EndChild();
 
             ImGui::Separator();
             ImGui::Checkbox(Locale::GetText(LocaleKey::FLIP_TEXTURE), &s_flipTexture);
@@ -421,6 +448,7 @@ bool WindowSystem::RenderMaterialDialog(MaterialSelection& materialSelection,
                     ImGui::End();
                     return false;
                 }
+
                 std::string extension = std::filesystem::path(texture).extension().string();
                 if (std::find(SUPPORTED_TEXTURE_EXTENSIONS.begin(),
                               SUPPORTED_TEXTURE_EXTENSIONS.end(),
@@ -457,6 +485,8 @@ bool WindowSystem::RenderMaterialDialog(MaterialSelection& materialSelection,
         if (ImGui::BeginTabItem(Locale::GetText(LocaleKey::SPECULAR))) {
             ImGui::Text("%s", Locale::GetText(LocaleKey::CHOOSE_SPECULAR_TEXTURE));
 
+            ImGui::BeginChild(
+                "SpecularTextures", ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 10), true);
             for (auto& texture : textures) {
                 bool isSelected = (materialSelection.specular == texture);
                 if (ImGui::Selectable((texture + " -> Specular").c_str(), isSelected)) {
@@ -467,6 +497,8 @@ bool WindowSystem::RenderMaterialDialog(MaterialSelection& materialSelection,
                     ImGui::SetItemDefaultFocus();
                 }
             }
+
+            ImGui::EndChild();
             ImGui::Separator();
             ImGui::Checkbox(Locale::GetText(LocaleKey::FLIP_TEXTURE), &s_flipTexture);
             if (ImGui::Button(Locale::GetText(LocaleKey::CHOOSE_TEXTURE_MANUALLY))) {
@@ -508,19 +540,8 @@ bool WindowSystem::RenderMaterialDialog(MaterialSelection& materialSelection,
     return false;
 }
 
-const std::optional<glm::vec3> WindowSystem::RenderModelColorPicker() {
-    ImGui::Begin(Locale::GetText(LocaleKey::MODEL_COLOR),
-                 nullptr,
-                 ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
-    static ImVec4 color = ImVec4(1.f, 1.f, 1.f, 1.f);
-    ImGui::ColorEdit3(Locale::GetText(LocaleKey::MODEL_COLOR), (float*)&color);
-
-    if (ImGui::Button(Locale::GetText(LocaleKey::APPLY))) {
-        ImGui::End();
-        return glm::vec3(color.x, color.y, color.z);
-    }
-    ImGui::End();
-    return std::nullopt;
+std::optional<ExportData> WindowSystem::GetExportData() {
+    return m_exportWindow.GetExportData();
 }
 
 void WindowSystem::RenderGizmoSettings() {

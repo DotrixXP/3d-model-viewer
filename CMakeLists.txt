@@ -69,10 +69,11 @@ add_library(imguizmo ${IMGUIZMO_SOURCES})
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "Disable building tests")
 set(ASSIMP_INSTALL OFF CACHE BOOL "Disable lib installing")
 set(ASSIMP_WARNINGS_AS_ERRORS OFF CACHE BOOL "Disable treating warning as errors")
-
 set(ASSIMP_DIR "${CMAKE_SOURCE_DIR}/dependencies/assimp")
 include_directories(SYSTEM ${ASSIMP_DIR}/include)
 add_subdirectory(${ASSIMP_DIR})
+target_compile_definitions(assimp PUBLIC ASSIMP_BUILD_NO_PBRT_EXPORTER)
+target_compile_definitions(assimp PUBLIC ASSIMP_BUILD_NO_M3D_EXPORTER)
 ##
 
 # NativeFileDialog
@@ -91,7 +92,7 @@ if(WIN32) # Pokud je operační systém Windows
     set(CMAKE_C_COMPILER "cl")
     set(CMAKE_CXX_COMPILER "cl")
     set_target_properties(3DViewer PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
-    target_link_libraries(3DViewer glad imgui imguizmo glfw assimp nfd)
+    target_link_libraries(3DViewer stbi_wrapper glad imgui imguizmo glfw assimp nfd)
 elseif(UNIX AND NOT APPLE) # Pokud je operační systém Linux
     set(CMAKE_C_COMPILER "clang")
     set(CMAKE_CXX_COMPILER "clang++")

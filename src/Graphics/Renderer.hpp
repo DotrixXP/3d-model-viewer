@@ -1,13 +1,18 @@
 ﻿#pragma once
 #include "../Core/CameraSystem.hpp"
-#include "../GUI/WindowSystem.hpp"
-#include "Model.hpp"
+#include "../Model/Model.hpp"
 #include "ShaderManager.hpp"
 #include "Skybox.hpp"
 
+enum class PolygonMode : uint8_t {
+    FILL,
+    LINE,
+    POINT
+};
+
 class Renderer {
   public:
-    void RenderModel(const Model& model, const InputData& inputData);
+    void RenderModel(Model& model, const InputData& inputData);
     void RenderAdditional();
     static Renderer& GetInstance();
     [[nodiscard]] uint32_t GetVerticesCount() const;
@@ -16,7 +21,7 @@ class Renderer {
     Shader& GetShader();
     void SetActiveShader(ShaderType active);
     void SetLightIntensity(float intensity);
-    void SetWireframeMode(bool active);
+    void SetPolygonMode(PolygonMode mode);
 
   private:
     ShaderType m_activeShader;
@@ -24,10 +29,10 @@ class Renderer {
     uint32_t m_verticesCount;
     uint32_t m_indicesCount;
     float m_lightIntensity;
-    bool m_wireframeMode;
-
+    PolygonMode m_polygonMode;
     Skybox m_skybox;
     ShaderBatch m_shaderBatch;
     Renderer();
     ~Renderer() = default;
 };
+

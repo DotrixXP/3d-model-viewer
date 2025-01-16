@@ -1,7 +1,8 @@
-﻿#pragma once
-#include "../Graphics/Model.hpp"
+#pragma once
+#include "Model.hpp"
 #include "../GUI/WindowSystem.hpp"
 #include "../Graphics/Renderer.hpp"
+#include "ModelLoader.hpp"
 #include <filesystem>
 
 enum class USER_INPUT : uint8_t {
@@ -9,20 +10,21 @@ enum class USER_INPUT : uint8_t {
     NO_INPUT
 };
 
-class ModelLoader {
+class ModelHandler {
   public:
-    ModelLoader();
-    ~ModelLoader();
+    ModelHandler();
+    ~ModelHandler() = default;
     void LoadSelectedModel();
+    void ExportSelectedModel(const ExportData& exportData);
     void RenderSelectedModel(InputData inputData);
     bool IsModelLoaded();
-    [[nodiscard]] const std::vector<std::string> FindTexture(const std::string& modelPath) const;
 
   private:
+    [[nodiscard]] const std::vector<std::string> FindTexture(const std::string& modelPath) const;
+    ModelLoader m_modelLoader;
+    ModelExporter m_modelExporter;
     MaterialSelection m_materialSelection;
     std::unique_ptr<Model> m_model;
-    uint32_t m_diffuseTexture;
-    uint32_t m_specularTexture;
     USER_INPUT m_waitingForUserInput = USER_INPUT::NO_INPUT;
     std::vector<std::string> m_texturePaths;
 };

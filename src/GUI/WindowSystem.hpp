@@ -1,25 +1,19 @@
 ﻿#pragma once
-#include "../Core/Core.hpp"
-#include "../Core/Window.hpp"
-#include "../Tools/FileDialog.hpp"
-#include "GuiData.hpp"
-#include "ImGuizmo.h"
-#include "imgui.h"
 #include <cstdint>
 #include <filesystem>
 #include <optional>
 #include <variant>
 #include <vector>
+#include "../Texture/Material.hpp"
+#include "../Core/Core.hpp"
+#include "../Core/Window.hpp"
+#include "../Tools/FileDialog.hpp"
+#include "ExportWindow.hpp"
+#include "GuiData.hpp"
+#include "ImGuizmo.h"
+#include "imgui.h"
 #include "../constants.hpp"
 #include "../Locale/Locale.hpp"
-
-struct MaterialSelection {
-    std::optional<std::variant<std::string, glm::vec3>> diffuse;
-    std::optional<std::string> specular;
-
-    MaterialSelection(std::variant<std::string, glm::vec3>, std::optional<std::string> specular);
-    MaterialSelection();
-};
 
 class WindowSystem {
   public:
@@ -29,21 +23,24 @@ class WindowSystem {
     void ApplyGuiData();
     static const glm::vec2 GetViewportWinSize();
 
-    static std::optional<std::filesystem::path> s_modelPath;
+    static std::optional<std::filesystem::path> s_newModelPath;
 
     static bool s_flipTexture;
 
     static bool RenderMaterialDialog(MaterialSelection& materialSelection,
                                      std::vector<std::string>& textures);
 
-    static const std::optional<glm::vec3> RenderModelColorPicker();
+    [[nodiscard]] std::optional<ExportData> GetExportData();
 
   private:
+    ExportWindow m_exportWindow;
+
     static bool s_isDiffuseTexture;
     static glm::vec2 s_viewportWinSize;
     static Language s_currentLanguage;
     inline void RenderApplicationSettings();
     inline void RenderPositionsWidgets();
+    inline void RenderRendererWidgets();
     inline void RenderClearColorPicker();
     inline void RenderModelInfo();
     inline void RenderCameraSettings();

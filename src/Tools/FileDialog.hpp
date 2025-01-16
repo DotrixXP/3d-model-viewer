@@ -12,6 +12,7 @@ class FileDialogManager {
 
     ~FileDialogManager();
     const std::string InvokeFileDialog();
+    const std::string InvokeFolderDialog();
 
   private:
     static std::unique_ptr<FileDialogManager> s_instance;

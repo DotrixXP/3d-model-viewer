@@ -10,6 +10,7 @@
 #include "glm/gtc/type_ptr.hpp"
 
 #include "../Tools/Log.hpp"
+#include "../Texture/Material.hpp"
 
 class Shader {
   private:
@@ -28,6 +29,8 @@ class Shader {
     Shader(const char* fragmentShaderPath, const char* vertexShaderPath);
     ~Shader();
     uint32_t GetShaderProgram();
+
+    void SetMaterialUniform(const Material& material);
     void SetUniform(const std::string& uniformName, int uniformData);
     void SetUniform(const std::string& uniformName, float uniformData);
     void SetUniform(const std::string& uniformName, bool uniformData);

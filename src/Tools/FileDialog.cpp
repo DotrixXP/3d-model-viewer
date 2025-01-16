@@ -1,4 +1,5 @@
 ﻿#include "FileDialog.hpp"
+#include <nfd.h>
 
 std::unique_ptr<FileDialogManager> FileDialogManager::s_instance = nullptr;
 
@@ -18,6 +19,24 @@ FileDialogManager::~FileDialogManager() {
 const std::string FileDialogManager::InvokeFileDialog() {
     nfdchar_t* outPath = nullptr;
     nfdresult_t result = NFD_OpenDialog(&outPath, nullptr, 0, nullptr);
+    std::string path = "";
+    if (result == NFD_OKAY) {
+        path = std::string(outPath);
+        free(outPath);
+    }
+    else if (result == NFD_CANCEL) {
+        Log::Error("User pressed cancel.");
+    }
+    else {
+        Log::Error("Error: %s\n" + std::string(NFD_GetError()));
+    }
+    return path;
+}
+
+const std::string FileDialogManager::InvokeFolderDialog() {
+
+    nfdchar_t* outPath = nullptr;
+    nfdresult_t result = NFD_PickFolder(&outPath, nullptr);
     std::string path = "";
     if (result == NFD_OKAY) {
         path = std::string(outPath);

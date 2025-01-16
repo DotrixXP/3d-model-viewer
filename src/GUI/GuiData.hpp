@@ -1,7 +1,9 @@
 #pragma once
 #include <glm/glm.hpp>
 #include "../Graphics/ShaderManager.hpp"
+#include "ExportWindow.hpp"
 
+enum class PolygonMode : uint8_t;
 struct InputData {
   private:
     glm::vec3 m_modelPos;
@@ -13,7 +15,7 @@ struct InputData {
     bool m_simpleShaderActive;
     bool m_reflectShaderActive;
     float m_lightIntensity;
-    bool m_wireframeMode;
+    PolygonMode m_polygonMode;
     glm::mat4 model;
     float m_materialShininess;
     glm::vec3 m_lightPos;
@@ -29,6 +31,8 @@ struct InputData {
     [[nodiscard]] bool GetAllowCameraInput() const;
     [[nodiscard]] float GetLightIntensity() const;
     [[nodiscard]] bool GetWireframeMode() const;
+    [[nodiscard]] bool GetPointsMode() const;
+    [[nodiscard]] PolygonMode GetPolygonMode() const;
     [[nodiscard]] glm::vec3 GetLightPos() const;
     [[nodiscard]] float GetMaterialShininess() const;
     [[nodiscard]] bool GetSkyboxActive() const;

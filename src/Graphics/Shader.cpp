@@ -84,6 +84,33 @@ uint32_t Shader::GetShaderProgram() {
     return m_shaderProgram;
 }
 
+void Shader::SetMaterialUniform(const Material& material) {
+
+    auto diffuseCol = material.TryGetDiffuseColor();
+    auto diffuseTex = material.TryGetDiffuseTexture();
+
+    if (diffuseCol.has_value()) {
+        // Make texture invalid
+        SetUniform("diffuseTexture", 0);
+
+        SetUniform("diffuseColor", glm::vec4(diffuseCol.value(), 1.f));
+    }
+    else if (diffuseTex.has_value()) {
+        diffuseTex.value().Bind(0);
+
+        // Make color invalid (alpha 0)
+        SetUniform("diffuseColor", glm::vec4(0.f));
+    }
+
+    if (material.specular.has_value()) {
+        material.specular.value().Bind(1);
+        SetUniform("hasSpecularTexture", 1);
+    }
+    else {
+        SetUniform("hasSpecularTexture", 0);
+    }
+}
+
 void Shader::SetUniform(const std::string& uniformName, int uniformData) {
     glUseProgram(m_shaderProgram);
     glUniform1i(glGetUniformLocation(m_shaderProgram, uniformName.c_str()), uniformData);

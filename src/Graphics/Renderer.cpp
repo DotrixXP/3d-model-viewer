@@ -1,17 +1,30 @@
 ﻿#include "Renderer.hpp"
 #include "../AssetManager.hpp"
+#include "../Core/GLDebug.hpp"
 
 Renderer& Renderer::GetInstance() {
     static Renderer instance;
     return instance;
 }
 
-void Renderer::RenderModel(const Model& model, const InputData& inputData) {
+void Renderer::RenderModel(Model& model, const InputData& inputData) {
 
     auto modelMatrix = inputData.GetModelMatrix();
 
     m_indicesCount = model.GetIndicesCount();
     m_verticesCount = model.GetVerticesCount();
+
+    if (m_polygonMode == PolygonMode::FILL) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+    else if (m_polygonMode == PolygonMode::LINE) {
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
+    else {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+    }
+
     if (m_activeShader == ShaderType::LIGHT) {
         m_shaderBatch.lightShader.Bind();
         m_shaderBatch.lightShader.SetUniform("projection",
@@ -19,18 +32,10 @@ void Renderer::RenderModel(const Model& model, const InputData& inputData) {
         m_shaderBatch.lightShader.SetUniform("view", CameraSystem::GetInstance().GetViewMatrix());
         m_shaderBatch.lightShader.SetUniform("model", modelMatrix);
         m_shaderBatch.lightShader.SetUniform("intensityMultiplier", m_lightIntensity);
-        m_shaderBatch.lightShader.SetUniform("color", model.GetColor());
         m_shaderBatch.lightShader.SetUniform("lightPos", inputData.GetLightPos());
         m_shaderBatch.lightShader.SetUniform("shininess", inputData.GetMaterialShininess());
 
-        m_shaderBatch.lightShader.SetUniform("diffuse", 0);
-        m_shaderBatch.lightShader.SetUniform("hasSpecularTexture", model.GetSpecularTex() != 0);
-        m_shaderBatch.lightShader.SetUniform("specular", 1);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, model.GetDiffuseTex());
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, model.GetSpecularTex());
+        m_shaderBatch.lightShader.SetMaterialUniform(model.GetMaterials());
     }
     else if (m_activeShader == ShaderType::SIMPLE) {
         m_shaderBatch.simpleShader.Bind();
@@ -38,10 +43,18 @@ void Renderer::RenderModel(const Model& model, const InputData& inputData) {
                                               CameraSystem::GetInstance().GetProjectionMatrix());
         m_shaderBatch.simpleShader.SetUniform("view", CameraSystem::GetInstance().GetViewMatrix());
         m_shaderBatch.simpleShader.SetUniform("model", modelMatrix);
-        m_shaderBatch.simpleShader.SetUniform("color", model.GetColor());
         m_shaderBatch.simpleShader.SetUniform("diffuse", 0);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, model.GetDiffuseTex());
+
+        auto diffuse = model.GetMaterials().TryGetDiffuseTexture();
+        auto color = model.GetMaterials().TryGetDiffuseColor();
+
+        if (diffuse.has_value()) {
+            diffuse.value().Bind(0);
+            m_shaderBatch.simpleShader.SetUniform("diffuseColor", glm::vec4(0.f));
+        }
+        else if (color.has_value()) {
+            m_shaderBatch.simpleShader.SetUniform("diffuseColor", glm::vec4(color.value(), 1.0f));
+        }
     }
     else {
         m_shaderBatch.reflect.Bind();
@@ -61,6 +74,8 @@ void Renderer::RenderModel(const Model& model, const InputData& inputData) {
     }
 
     model.DrawArrays();
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void Renderer::RenderAdditional() {
@@ -83,9 +98,18 @@ void Renderer::SetLightIntensity(float intensity) {
     m_lightIntensity = intensity;
 }
 
-void Renderer::SetWireframeMode(bool active) {
-    m_wireframeMode = active;
-    glPolygonMode(GL_FRONT_AND_BACK, m_wireframeMode ? GL_LINE : GL_FILL);
+void Renderer::SetPolygonMode(PolygonMode mode) {
+    if (mode == PolygonMode::FILL) {
+        m_polygonMode = mode;
+    }
+    else if (mode == PolygonMode::LINE) {
+
+        m_polygonMode = mode;
+    }
+    else {
+
+        m_polygonMode = mode;
+    }
 }
 
 Renderer::Renderer()
@@ -93,7 +117,7 @@ Renderer::Renderer()
     , m_verticesCount(0)
     , m_indicesCount(0)
     , m_lightIntensity(1.0f)
-    , m_wireframeMode(false)
+    , m_polygonMode(PolygonMode::FILL)
     , m_skybox(AssetManager::GetAssetPath(Assets::SKYBOX_FOLDER), ".jpg") {}
 
 Shader& Renderer::GetShader() {

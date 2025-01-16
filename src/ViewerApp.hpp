@@ -1,9 +1,11 @@
 ﻿#include "Core/GLDebug.hpp"
 #include "Core/Window.hpp"
+#include "GUI/ErrorWindow.hpp"
 #include "GUI/WindowSystem.hpp"
-#include "Graphics/Model.hpp"
+#include "Model/Model.hpp"
 #include "Graphics/Renderer.hpp"
-#include "Tools/ModelLoader.hpp"
+#include "Model/ModelHandler.hpp"
+#include "Model/ModelLoader.hpp"
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
@@ -27,12 +29,11 @@ inline void ViewerApp::Run(const std::string& initialModelPath) {
     OpenglData::SetDepthTesting(true);
     WindowSystem windowsSystem;
 
-    ModelLoader modelLoader;
-
+    ModelHandler modelHandler;
     while (!Window::WindowShouldClose()) {
         auto inputData = windowsSystem.GetInputData();
         if (modelPath.size() > 0) {
-            WindowSystem::s_modelPath = std::filesystem::path(initialModelPath);
+            WindowSystem::s_newModelPath = std::filesystem::path(initialModelPath);
             modelPath.clear();
         }
 
@@ -40,18 +41,24 @@ inline void ViewerApp::Run(const std::string& initialModelPath) {
         Core::StartRenderingToTexture(windowsSystem.GetViewportWinSize());
         CameraSystem::GetInstance().UpdateInput();
         CameraSystem::GetInstance().SetInputState(inputData.GetAllowCameraInput());
-        modelLoader.LoadSelectedModel();
+        modelHandler.LoadSelectedModel();
 
-        modelLoader.RenderSelectedModel(inputData);
+        modelHandler.RenderSelectedModel(inputData);
+
         if (inputData.GetSkyboxActive())
             Renderer::GetInstance().RenderAdditional();
+
+        auto exportData = windowsSystem.GetExportData();
+        if (exportData.has_value())
+            modelHandler.ExportSelectedModel(exportData.value());
+
         Renderer::GetInstance().SetActiveShader(inputData.GetActiveShader());
         Renderer::GetInstance().SetLightIntensity(inputData.GetLightIntensity());
-        Renderer::GetInstance().SetWireframeMode(inputData.GetWireframeMode());
+        Renderer::GetInstance().SetPolygonMode(inputData.GetPolygonMode());
         windowsSystem.ApplyGuiData();
         PerfData::CollectPerformanceData();
         Core::FinishRenderingToTexture();
-        windowsSystem.RenderWindows(modelLoader.IsModelLoaded());
+        windowsSystem.RenderWindows(modelHandler.IsModelLoaded());
         Core::OnRenderEnd();
     }
     Window::DestroyWindow();

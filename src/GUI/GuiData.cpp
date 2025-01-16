@@ -1,4 +1,5 @@
 #include "GuiData.hpp"
+#include "../Graphics/Renderer.hpp"
 #include <glm/ext/matrix_transform.hpp>
 
 InputData::InputData(glm::vec3 modelPos,
@@ -15,7 +16,7 @@ InputData::InputData(glm::vec3 modelPos,
     , m_simpleShaderActive(false)
     , m_reflectShaderActive(false)
     , m_lightIntensity(0.5f)
-    , m_wireframeMode(false)
+    , m_polygonMode(PolygonMode::FILL)
     , m_materialShininess(32.0f)
     , m_lightPos(1.2f, 1.0f, 2.0f)
     , m_skyboxActive(true) {
@@ -23,6 +24,11 @@ InputData::InputData(glm::vec3 modelPos,
     model = glm::translate(model, modelPos);
     model = glm::rotate(model, glm::radians(modelRotAngle), modelRot);
     model = glm::scale(model, modelScale);
+}
+
+
+PolygonMode InputData::GetPolygonMode() const {
+    return m_polygonMode;
 }
 
 bool InputData::GetSkyboxActive() const {
@@ -44,10 +50,6 @@ ShaderType InputData::GetActiveShader() const {
 
 float InputData::GetLightIntensity() const {
     return m_lightIntensity;
-}
-
-bool InputData::GetWireframeMode() const {
-    return m_wireframeMode;
 }
 
 glm::vec3 InputData::GetLightPos() const {

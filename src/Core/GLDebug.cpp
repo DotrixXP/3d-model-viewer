@@ -3,11 +3,9 @@
 void GLDebug::EnableDebugMode() {
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
     glEnable(GL_DEBUG_OUTPUT);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); // SynchronnĂ­ vĂ˝stup
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(glDebugOutput, nullptr);
     glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
-
-    Log::Warn("OpenGL Debug mode je Aktivni!");
 }
 
 GLenum GLDebug::CheckForError_(const char* file, int line) {

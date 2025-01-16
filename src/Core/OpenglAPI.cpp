@@ -6,7 +6,7 @@ uint32_t OpenglAPI::m_drawCallsCountValue = OpenglAPI::m_drawCallsCount;
 bool OpenglAPI::InitOpenglAPI() {
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        Log::Error("OpenglAPI (Glad) se nespustil!");
+        Log::Error("OpenglAPI (Glad) failed to load!");
         return false;
     }
     else
