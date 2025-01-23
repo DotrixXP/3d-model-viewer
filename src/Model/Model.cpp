@@ -18,6 +18,10 @@ void Model::DrawArrays() const {
             m_meshe.DrawArrays();
 }
 
+const std::filesystem::path& Model::GetDirectoryPath() const {
+    return m_path;
+}
+
 Model::~Model() {
     if (m_meshes.empty())
         return;
@@ -41,72 +45,6 @@ Model::Model(Model&& other) noexcept
 
 Material& Model::GetMaterials() {
     return m_materials;
-}
-
-void Model::ExportModel(const std::string& exportPath, const std::string& format) const {
-    Assimp::Exporter exporter;
-
-    // Create a new scene to export
-    aiScene scene;
-    scene.mRootNode = new aiNode();
-
-    // Fill the scene with meshes
-    scene.mMeshes = new aiMesh*[m_meshes.size()];
-    scene.mNumMeshes = m_meshes.size();
-    scene.mMaterials = new aiMaterial*[1];
-    scene.mMaterials[0] = new aiMaterial();
-    scene.mNumMaterials = 1;
-
-    for (size_t i = 0; i < m_meshes.size(); ++i) {
-        const auto& mesh = m_meshes[i];
-        auto* ai_mesh = new aiMesh();
-        ai_mesh->mMaterialIndex = 0;
-
-        // Fill vertices
-        ai_mesh->mVertices = new aiVector3D[mesh.vertices.size()];
-        ai_mesh->mNumVertices = mesh.vertices.size();
-        for (size_t j = 0; j < mesh.vertices.size(); ++j) {
-            ai_mesh->mVertices[j] = aiVector3D(mesh.vertices[j].position.x,
-                                               mesh.vertices[j].position.y,
-                                               mesh.vertices[j].position.z);
-        }
-
-        // Fill indices
-        ai_mesh->mFaces = new aiFace[mesh.indices.size() / 3];
-        ai_mesh->mNumFaces = mesh.indices.size() / 3;
-        for (size_t j = 0; j < mesh.indices.size() / 3; ++j) {
-            aiFace& face = ai_mesh->mFaces[j];
-            face.mIndices = new unsigned int[3];
-            face.mNumIndices = 3;
-            face.mIndices[0] = mesh.indices[j * 3];
-            face.mIndices[1] = mesh.indices[j * 3 + 1];
-            face.mIndices[2] = mesh.indices[j * 3 + 2];
-        }
-
-        scene.mMeshes[i] = ai_mesh;
-    }
-
-    // Export the scene
-    if (exporter.Export(&scene, format, exportPath) != AI_SUCCESS) {
-        Log::Error("Failed to export model: " + std::string(exporter.GetErrorString()));
-    }
-    else {
-        Log::Info("Model exported successfully to: " + exportPath);
-    }
-
-    // Clean up
-    for (size_t i = 0; i < scene.mNumMeshes; ++i) {
-        delete[] scene.mMeshes[i]->mVertices;
-        for (size_t j = 0; j < scene.mMeshes[i]->mNumFaces; ++j) {
-            delete[] scene.mMeshes[i]->mFaces[j].mIndices;
-        }
-        delete[] scene.mMeshes[i]->mFaces;
-        delete scene.mMeshes[i];
-    }
-    delete[] scene.mMeshes;
-    delete scene.mRootNode;
-    delete scene.mMaterials[0];
-    delete[] scene.mMaterials;
 }
 
 uint32_t Model::GetVerticesCount() const {

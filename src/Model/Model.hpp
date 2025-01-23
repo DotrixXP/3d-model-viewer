@@ -13,20 +13,20 @@ class ModelExporter;
 
 class Model {
   public:
-    void ExportModel(const std::string& exportPath, const std::string& format) const;
     void DrawArrays() const;
     [[nodiscard]] uint32_t GetVerticesCount() const;
     [[nodiscard]] uint32_t GetIndicesCount() const;
     [[nodiscard]] Material& GetMaterials();
     [[nodiscard]] const std::optional<glm::vec4> GetColor() const;
-    [[nodiscard]] const std::string& GetDirectoryPath() const;
+    [[nodiscard]] const std::filesystem::path& GetDirectoryPath() const;
 
     ~Model();
     Model(const Model& other) = delete;
     Model(Model&& other) noexcept;
 
   private:
-    Model(std::vector<Mesh>&& meshes, const aiScene* scene, const std::filesystem::path modelPath);
+    Model(
+        std::vector<Mesh>&& meshes, const aiScene* scene, const std::filesystem::path modelPath);
     void LoadModel(const std::string& directoryPath);
     void ProcessNode(aiNode* node, const aiScene* scene);
 

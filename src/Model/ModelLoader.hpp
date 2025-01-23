@@ -3,6 +3,7 @@
 #include "../GUI/WindowSystem.hpp"
 #include "../Graphics/Renderer.hpp"
 #include <filesystem>
+#include <future>
 
 enum class PostProcessing : std::uint32_t {
     CALC_TANGENT_SPACE = aiProcess_CalcTangentSpace,
@@ -37,11 +38,14 @@ class ModelLoader {
   public:
     ModelLoader();
     ~ModelLoader() = default;
-    std::optional<Model> LoadModel(const std::filesystem::path& modelPath);
+    void TryStartModelLoading(const std::filesystem::path& modelPath);
+    std::optional<Model> RetrieveLoadedModel();
+
     void OptimizeModel(Model& model, PostProcessing effect);
 
   private:
     void ProcessNode(std::vector<Mesh>& meshes, aiNode* node, const aiScene* scene);
     Mesh ProcessMesh(aiMesh* mesh);
     Assimp::Importer m_importer;
+    std::optional<std::future<std::tuple<const aiScene*, std::filesystem::path>>> m_loading;
 };

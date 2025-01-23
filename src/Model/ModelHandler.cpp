@@ -16,8 +16,11 @@ void ModelHandler::LoadSelectedModel() {
             m_texturePaths = std::vector<std::string>();
         }
 
-        auto model = m_modelLoader.LoadModel(WindowSystem::s_newModelPath.value().string());
+        m_modelLoader.TryStartModelLoading(WindowSystem::s_newModelPath.value().string());
+        auto model = m_modelLoader.RetrieveLoadedModel();
+
         if (model.has_value()) {
+            Log::Info("Model loaded successfully");
             m_model = std::make_unique<Model>(std::move(model.value()));
         }
         else {
@@ -67,10 +70,9 @@ const std::vector<std::string> ModelHandler::FindTexture(const std::string& mode
     return textures;
 }
 
-void ModelHandler::ExportSelectedModel(const ExportData& exportData)
-{
+void ModelHandler::ExportSelectedModel(const ExportData& exportData) {
     if (m_model != nullptr) {
-      m_modelExporter.ExportModel(*m_model, exportData.exportPath, exportData.exportFormat);
+        m_modelExporter.ExportModel(*m_model, exportData.exportPath, exportData.exportFormat);
     }
 }
 

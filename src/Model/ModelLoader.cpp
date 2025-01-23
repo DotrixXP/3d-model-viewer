@@ -2,25 +2,54 @@
 #include <assimp/postprocess.h>
 
 ModelLoader::ModelLoader()
-    : m_importer() {}
+    : m_importer()
+    , m_loading() {}
 
-std::optional<Model> ModelLoader::LoadModel(const std::filesystem::path& modelPath) {
-    std::vector<Mesh> meshes;
-    const aiScene* scene = m_importer.ReadFile(modelPath, aiProcess_Triangulate);
+void ModelLoader::TryStartModelLoading(const std::filesystem::path& modelPath) {
+    // Returning only scene because creating opengl buffers cannot be done in parallel
+    if (!m_loading.has_value()) {
+        m_loading = std::async(
+            std::launch::async, [=, this]() -> std::tuple<const aiScene*, std::filesystem::path> {
+                Log::Info("Loading model in async: ", modelPath);
+                const aiScene* scene = m_importer.ReadFile(modelPath, aiProcess_Triangulate);
 
-    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-        Log::Error(m_importer.GetErrorString());
-        return std::nullopt;
+                if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
+                    Log::Error(m_importer.GetErrorString());
+                    return std::make_tuple(nullptr, modelPath);
+                }
+                else {
+                    Log::Info("Model: ", modelPath, " successfully loaded!");
+                }
+
+                return std::make_tuple(scene, modelPath);
+            });
     }
-    else {
-        Log::Info("Model: ", modelPath, " successfully loaded!");
+}
+
+std::optional<Model> ModelLoader::RetrieveLoadedModel() {
+    if (m_loading.has_value()) {
+        if (m_loading.value().valid()) {
+            try {
+                auto [scene, path] = m_loading.value().get();
+                m_loading.reset();
+                if (scene) {
+                    std::vector<Mesh> meshes;
+                    ModelLoader::ProcessNode(meshes, scene->mRootNode, scene);
+
+                    Model model(std::move(meshes), scene, path);
+
+                    return std::optional<Model> { std::move(model) };
+                }
+                else {
+                    Log::Error("Model loading failed");
+                }
+            }
+            catch (const std::future_error& e) {
+                Log::Error("Future error: ", e.what());
+            }
+        }
     }
-
-    ModelLoader::ProcessNode(meshes, scene->mRootNode, scene);
-
-    Model model(std::move(meshes), scene, modelPath);
-
-    return { std::move(model) };
+    return std::nullopt;
 }
 
 void ModelLoader::OptimizeModel(Model& model, PostProcessing effect) {
