@@ -72,7 +72,7 @@ bool Window::InitWindow(const uint32_t windowWidth,
     Core::InitEngine();
 
     GLFWimage images[1];
-    images[0].pixels = stbi_load(AssetManager::GetAssetPath(Assets::WINDOW_ICON).c_str(),
+    images[0].pixels = stbi_load(AssetManager::GetAssetPath(Assets::WINDOW_ICON).string().c_str(),
                                  &images[0].width,
                                  &images[0].height,
                                  nullptr,

@@ -17,10 +17,10 @@ void Locale::SetLanguage(Language language) {
 
         switch (s_currentLanguage) {
         case Language::ENGLISH:
-            LoadLocale(AssetManager::GetAssetPath(Assets::ENGLISH_LOCALE));
+            LoadLocale(AssetManager::GetAssetPath(Assets::ENGLISH_LOCALE).string());
             break;
         case Language::CZECH:
-            LoadLocale(AssetManager::GetAssetPath(Assets::CZECH_LOCALE));
+            LoadLocale(AssetManager::GetAssetPath(Assets::CZECH_LOCALE).string());
             break;
         }
     }
@@ -43,7 +43,7 @@ void Locale::LoadLocale(const std::string& localePath) {
 
 const char* Locale::GetText(LocaleKey key) {
   if (s_localeKeys.empty()) {
-    LoadLocale(AssetManager::GetAssetPath(Assets::CZECH_LOCALE));
+        LoadLocale(AssetManager::GetAssetPath(Assets::CZECH_LOCALE).string().c_str());
   }
   return s_localeKeys[static_cast<uint32_t>(key)].c_str();
 }

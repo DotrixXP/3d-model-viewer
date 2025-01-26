@@ -11,7 +11,8 @@ void ModelLoader::TryStartModelLoading(const std::filesystem::path& modelPath) {
         m_loading = std::async(
             std::launch::async, [=, this]() -> std::tuple<const aiScene*, std::filesystem::path> {
                 Log::Info("Loading model in async: ", modelPath);
-                const aiScene* scene = m_importer.ReadFile(modelPath, aiProcess_Triangulate);
+                const aiScene* scene
+                    = m_importer.ReadFile(modelPath.string().c_str(), aiProcess_Triangulate);
 
                 if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
                     Log::Error(m_importer.GetErrorString());
@@ -54,7 +55,8 @@ std::optional<Model> ModelLoader::RetrieveLoadedModel() {
 
 void ModelLoader::OptimizeModel(Model& model, PostProcessing effect) {
     std::vector<Mesh> meshes;
-    const aiScene* scene = m_importer.ReadFile(model.m_path, (aiPostProcessSteps)effect);
+    const aiScene* scene
+        = m_importer.ReadFile(model.m_path.string().c_str(), (aiPostProcessSteps)effect);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         Log::Error(m_importer.GetErrorString());

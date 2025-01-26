@@ -72,7 +72,8 @@ const std::vector<std::string> ModelHandler::FindTexture(const std::string& mode
 
 void ModelHandler::ExportSelectedModel(const ExportData& exportData) {
     if (m_model != nullptr) {
-        m_modelExporter.ExportModel(*m_model, exportData.exportPath, exportData.exportFormat);
+        m_modelExporter.ExportModel(
+            *m_model, exportData.exportPath.string(), exportData.exportFormat);
     }
 }
 

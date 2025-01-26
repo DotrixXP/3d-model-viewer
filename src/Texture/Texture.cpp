@@ -31,7 +31,7 @@ void Texture::LoadTexture(const std::filesystem::path& texturePath, bool flipTex
     auto filtering = GL_LINEAR;
 
     stbi_set_flip_vertically_on_load(flipTexture);
-    data = stbi_load(texturePath.c_str(), &width, &height, &colorChannels, 0);
+    data = stbi_load(texturePath.string().c_str(), &width, &height, &colorChannels, 0);
     if (data) {
         GLenum format = 3;
         if (colorChannels == 1)

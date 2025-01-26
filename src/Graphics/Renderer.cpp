@@ -118,7 +118,7 @@ Renderer::Renderer()
     , m_indicesCount(0)
     , m_lightIntensity(1.0f)
     , m_polygonMode(PolygonMode::FILL)
-    , m_skybox(AssetManager::GetAssetPath(Assets::SKYBOX_FOLDER), ".jpg") {}
+    , m_skybox(AssetManager::GetAssetPath(Assets::SKYBOX_FOLDER).string().c_str(), ".jpg") {}
 
 Shader& Renderer::GetShader() {
     return m_shaderBatch.lightShader;
