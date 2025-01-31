@@ -1,5 +1,6 @@
 #include "Skybox.hpp"
 #include "../Core/CameraSystem.hpp"
+#include "../AssetManager.hpp"
 
 Skybox::Skybox(const std::vector<std::string>& cubemapTextures) {
     m_cubemapTextures = cubemapTextures;
@@ -9,11 +10,13 @@ Skybox::Skybox(const std::vector<std::string>& cubemapTextures) {
 }
 
 Skybox::Skybox(const std::string& folderDirectoryPath, const std::string& fileFormat) {
-    std::vector<std::string> cubemapsTextures {
-        folderDirectoryPath + "/right" + fileFormat,  folderDirectoryPath + "/left" + fileFormat,
-        folderDirectoryPath + "/bottom" + fileFormat, folderDirectoryPath + "/top" + fileFormat,
-        folderDirectoryPath + "/front" + fileFormat,  folderDirectoryPath + "/back" + fileFormat
-    };
+    std::filesystem::path folderPath(folderDirectoryPath);
+    std::vector<std::string> cubemapsTextures { (folderPath / ("right" + fileFormat)).string(),
+                                                (folderPath / ("left" + fileFormat)).string(),
+                                                (folderPath / ("bottom" + fileFormat)).string(),
+                                                (folderPath / ("top" + fileFormat)).string(),
+                                                (folderPath / ("front" + fileFormat)).string(),
+                                                (folderPath / ("back" + fileFormat)).string() };
 
     m_cubemapTextures = cubemapsTextures;
     m_textureID = Skybox::LoadTextureFromFile(cubemapsTextures);
@@ -135,8 +138,9 @@ uint32_t Skybox::GetCubeMapTex() const {
 }
 
 void Skybox::CreateShader() {
-    m_cubemapShader = new Shader("/home/dominik/Projekty/3d-model-viewer/res/cubemap.frag",
-                                 "/home/dominik/Projekty/3d-model-viewer/res/cubemap.vert");
+    m_cubemapShader
+        = new Shader(AssetManager::GetAssetPath(Assets::CUBEMAP_SHADER_FRAGMENT).string().c_str(),
+                     AssetManager::GetAssetPath(Assets::CUBEMAP_SHADER_VERTEX).string().c_str());
 }
 
 Shader& Skybox::GetSkyboxShader() const {

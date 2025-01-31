@@ -29,6 +29,10 @@ const std::filesystem::path AssetManager::GetAssetPath(Assets asset) {
         return s_assetsFolder / "locale" / "en.loc";
     case Assets::CZECH_LOCALE:
         return s_assetsFolder / "locale" / "cs.loc";
+    case Assets::CUBEMAP_SHADER_VERTEX:
+        return s_assetsFolder / "cubemap.vert.glsl";
+    case Assets::CUBEMAP_SHADER_FRAGMENT:
+        return s_assetsFolder / "cubemap.frag.glsl";
     default:
         PANIC("Asset not found");
         return "";
