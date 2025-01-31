@@ -87,13 +87,14 @@ set_target_properties(assimp PROPERTIES COMPILE_FLAGS "-w")
 file(GLOB_RECURSE SOURCES "src/*.hpp" "src/*.cpp" "src/*.h")
 
 add_executable(3DViewer ${SOURCES})
-target_compile_options(3DViewer PRIVATE -Wall -Wno-narrowing -Wextra -Wno-deprecated-copy-with-user-provided-dtor)
+
 if(WIN32) # Pokud je operační systém Windows
     set(CMAKE_C_COMPILER "cl")
     set(CMAKE_CXX_COMPILER "cl")
     set_target_properties(3DViewer PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
     target_link_libraries(3DViewer stbi_wrapper glad imgui imguizmo glfw assimp nfd)
 elseif(UNIX AND NOT APPLE) # Pokud je operační systém Linux
+    target_compile_options(3DViewer PRIVATE -Wall -Wno-narrowing -Wextra -Wno-deprecated-copy-with-user-provided-dtor)
     set(CMAKE_C_COMPILER "clang")
     set(CMAKE_CXX_COMPILER "clang++")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsized-deallocation")
