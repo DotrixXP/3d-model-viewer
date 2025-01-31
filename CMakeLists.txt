@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.2)
 project(3DViewer)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -91,8 +91,8 @@ add_executable(3DViewer ${SOURCES})
 if(WIN32) # Pokud je operační systém Windows
     set(CMAKE_C_COMPILER "cl")
     set(CMAKE_CXX_COMPILER "cl")
-    set_target_properties(3DViewer PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
-    target_link_libraries(3DViewer stbi_wrapper glad imgui imguizmo glfw assimp nfd)
+    #set_target_properties(3DViewer PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
+    target_link_libraries(3DViewer PUBLIC  glad imgui imguizmo glfw assimp nfd)
 elseif(UNIX AND NOT APPLE) # Pokud je operační systém Linux
     target_compile_options(3DViewer PRIVATE -Wall -Wno-narrowing -Wextra -Wno-deprecated-copy-with-user-provided-dtor)
     set(CMAKE_C_COMPILER "clang")

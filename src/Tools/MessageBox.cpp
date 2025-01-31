@@ -3,13 +3,13 @@
 #include <cstring>
 #include <string>
 
-#ifdef VXLN_PLATFORM_WINDOWS
+#ifdef _WIN32
 #include <windows.h>
 #endif
 
 void ShowMessageBox(const char* title, const char* message, MessageBoxType type) {
 #ifdef _WIN32
-    /* UINT uType;
+     UINT uType;
     switch (type) {
     case MessageBoxType::Info:
         uType = MB_ICONINFORMATION;
@@ -21,7 +21,7 @@ void ShowMessageBox(const char* title, const char* message, MessageBoxType type)
         uType = MB_ICONERROR;
         break;
     }
-    MessageBoxA(nullptr, message, title, uType | MB_OK);*/
+    MessageBoxA(nullptr, message, title, uType | MB_OK);
 #else
     std::string command;
 
