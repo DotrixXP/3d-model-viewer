@@ -4,6 +4,7 @@
 #include "ImGuizmo.h"
 #include "imgui.h"
 #include "GuiStyle.hpp"
+#include "../AppSettings.hpp"
 #include <ranges>
 #include <utility>
 #include <variant>
@@ -15,7 +16,6 @@ bool WindowSystem::s_showTextureErrorWindow = false;
 bool WindowSystem::s_showModelErrorWindow = false;
 bool WindowSystem::s_showApplicationSettings = false;
 bool WindowSystem::s_isDiffuseTexture = true;
-Language WindowSystem::s_currentLanguage = Language::CZECH;
 
 WindowSystem::WindowSystem()
     : m_inputData(glm::vec3(2.f, 0.f, -5.f), glm::vec3(1.0f), glm::vec3(1.0f), 0.0f, true)
@@ -27,11 +27,12 @@ WindowSystem::WindowSystem()
 }
 
 void WindowSystem::RenderApplicationSettings() {
-    ImVec2 windowSize(400, 200);
-    ImGui::SetNextWindowSize(windowSize, ImGuiCond_Always);
+    static Language s_currentLanguage
+        = LanguageFromString(SettingsManager::Get().GetLoadedSettings().language);
+
     if (ImGui::Begin(Locale::GetText(LocaleKey::SETTINGS),
                      nullptr,
-                     ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
+                     ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
 
         if (ImGui::BeginTabBar("SettingsTabs")) {
 
@@ -53,6 +54,11 @@ void WindowSystem::RenderApplicationSettings() {
             }
 
             if (ImGui::BeginTabItem(Locale::GetText(LocaleKey::DISPLAY))) {
+                ImGui::Text("%s", Locale::GetText(LocaleKey::FONT_SIZE));
+                static int fontSize = SettingsManager::Get().GetLoadedSettings().fontSize;
+
+                ImGui::SliderInt(Locale::GetText(LocaleKey::SET_FONT_SIZE), &fontSize, 18, 30);
+                ImguiRendering::ChangeFontSize(fontSize);
                 ImGui::EndTabItem();
             }
 
@@ -118,8 +124,16 @@ void WindowSystem::RenderWindows(bool isObjectRendered) {
         ImGui::Separator();
         ImGui::Dummy(ImVec2(0, 10));
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(30, 10));
-        ImGui::SetCursorPosX((windowWidth - 120) / 2.0f);
-        if (ImGui::Button(Locale::GetText(LocaleKey::LOAD_MODEL), ImVec2(150, 50))) {
+        ImGuiIO& io = ImGui::GetIO();
+        float fontSize = io.FontDefault->FontSize;
+
+        // Calculate the button size based on the font size
+        float buttonWidth = fontSize * 10.0f; // Adjust the multiplier as needed
+        float buttonHeight = fontSize * 3.0f; // Adjust the multiplier as needed
+
+        ImGui::SetCursorPosX((windowWidth - buttonWidth) / 2.0f);
+        if (ImGui::Button(Locale::GetText(LocaleKey::LOAD_MODEL),
+                          ImVec2(buttonWidth, buttonHeight))) {
             OpenModelSelectionDialog();
         }
         ImGui::PopStyleVar();
@@ -191,13 +205,16 @@ void WindowSystem::RenderWindows(bool isObjectRendered) {
 }
 
 void WindowSystem::RenderRendererWidgets() {
-    if (ImGui::RadioButton("Fill", m_inputData.m_polygonMode == PolygonMode::FILL)) {
+    if (ImGui::RadioButton(Locale::GetText(LocaleKey::FILL_MODE),
+                           m_inputData.m_polygonMode == PolygonMode::FILL)) {
         m_inputData.m_polygonMode = PolygonMode::FILL;
     }
-    if (ImGui::RadioButton("Wireframe", m_inputData.m_polygonMode == PolygonMode::LINE)) {
+    if (ImGui::RadioButton(Locale::GetText(LocaleKey::WIREFRAME_MODE),
+                           m_inputData.m_polygonMode == PolygonMode::LINE)) {
         m_inputData.m_polygonMode = PolygonMode::LINE;
     }
-    if (ImGui::RadioButton("Points", m_inputData.m_polygonMode == PolygonMode::POINT)) {
+    if (ImGui::RadioButton(Locale::GetText(LocaleKey::POINTS_MODE),
+                           m_inputData.m_polygonMode == PolygonMode::POINT)) {
         m_inputData.m_polygonMode = PolygonMode::POINT;
     }
 }
@@ -219,7 +236,7 @@ void WindowSystem::OpenModelSelectionDialog() {
     }
     else {
         s_showModelErrorWindow = true;
-        Log::Info("Nebyl vybraný správný 3D model");
+        Log::Info("Not supported file extension: " + extension);
     }
 }
 
@@ -348,7 +365,7 @@ ImVec2 WindowSystem::RenderMainMenuBar(bool isObjectRendered) {
         if (!isObjectRendered)
             ImGui::BeginDisabled();
 
-        if (ImGui::Button("Export Model")) {
+        if (ImGui::Button(Locale::GetText(LocaleKey::EXPORT_MODEL))) {
             m_exportWindow.m_open = true;
         }
 
@@ -382,9 +399,13 @@ void WindowSystem::RenderClearColorPicker() {
 void WindowSystem::RenderModelInfo() {
     ImGui::Separator();
     ImGui::Text("%s", Locale::GetText(LocaleKey::MODEL_INFO));
-    ImGui::Text((std::string(Locale::GetText(LocaleKey::VERTEX_COUNT)) + std::string("%d")).c_str(),
+    ImGui::Text((std::string(Locale::GetText(LocaleKey::VERTEX_COUNT)) + std::string(" ")
+                 + std::string("%d"))
+                    .c_str(),
                 Renderer::GetInstance().GetVerticesCount());
-    ImGui::Text((std::string(Locale::GetText(LocaleKey::INDEX_COUNT)) + std::string("%d")).c_str(),
+    ImGui::Text((std::string(Locale::GetText(LocaleKey::INDEX_COUNT)) + std::string(" ")
+                 + std::string("%d"))
+                    .c_str(),
                 Renderer::GetInstance().GetIndicesCount());
     ImGui::Separator();
 }
@@ -400,7 +421,9 @@ bool WindowSystem::RenderMaterialDialog(MaterialSelection& materialSelection,
 
     ImGui::Begin(Locale::GetText(LocaleKey::AUTOMATIC_TEXTURE_SELECTION),
                  nullptr,
-                 ImGuiWindowFlags_NoCollapse);
+                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+
+    const uint32_t textureListHeight = 5;
 
     static ImVec4 color = ImVec4(1.f, 1.f, 1.f, 1.f);
     if (ImGui::BeginTabBar("MaterialTabs")) {
@@ -420,18 +443,29 @@ bool WindowSystem::RenderMaterialDialog(MaterialSelection& materialSelection,
             if (s_isDiffuseTexture == 0)
                 ImGui::BeginDisabled();
 
-            ImGui::BeginChild(
-                "DiffuseTextures", ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 10), true);
+            ImGui::BeginChild("DiffuseTextures",
+                              ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * textureListHeight),
+                              true);
             for (auto& texture : textures) {
                 bool isSelected
                     = materialSelection.diffuse.has_value()
                       && std::holds_alternative<std::string>(materialSelection.diffuse.value())
                       && std::get<std::string>(materialSelection.diffuse.value()) == texture;
 
-                if (ImGui::Selectable((texture + " -> Diffuse").c_str(), isSelected)) {
+                if (ImGui::Selectable(
+                        (std::filesystem::path(texture).filename().string() + " -> Diffuse?")
+                            .c_str(),
+                        isSelected)) {
                     materialSelection.diffuse = texture;
                     Log::Info("Diffuse texture: " + texture);
                 }
+
+                if (ImGui::IsItemHovered()) {
+                    ImGui::BeginTooltip();
+                    ImGui::Text("%s", texture.c_str());
+                    ImGui::EndTooltip();
+                }
+
                 if (isSelected) {
                     ImGui::SetItemDefaultFocus();
                 }
@@ -454,7 +488,7 @@ bool WindowSystem::RenderMaterialDialog(MaterialSelection& materialSelection,
                               SUPPORTED_TEXTURE_EXTENSIONS.end(),
                               extension)
                     == SUPPORTED_TEXTURE_EXTENSIONS.end()) {
-                    Log::Error("Nepodporovaný formát textury:" + texture);
+                    Log::Error("Unsuported texture format" + texture);
                     s_showTextureErrorWindow = true;
                     ImGui::EndTabBar();
                     ImGui::End();
@@ -485,16 +519,26 @@ bool WindowSystem::RenderMaterialDialog(MaterialSelection& materialSelection,
         if (ImGui::BeginTabItem(Locale::GetText(LocaleKey::SPECULAR))) {
             ImGui::Text("%s", Locale::GetText(LocaleKey::CHOOSE_SPECULAR_TEXTURE));
 
-            ImGui::BeginChild(
-                "SpecularTextures", ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 10), true);
+            ImGui::BeginChild("SpecularTextures",
+                              ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * textureListHeight),
+                              true);
             for (auto& texture : textures) {
                 bool isSelected = (materialSelection.specular == texture);
-                if (ImGui::Selectable((texture + " -> Specular").c_str(), isSelected)) {
+                if (ImGui::Selectable(
+                        (std::filesystem::path(texture).filename().string() + " -> Specular?")
+                            .c_str(),
+                        isSelected)) {
                     materialSelection.specular = texture;
-                    Log::Info("Specular textura: " + texture);
+                    Log::Info("Specular texture: " + texture);
                 }
                 if (isSelected) {
                     ImGui::SetItemDefaultFocus();
+                }
+
+                if (ImGui::IsItemHovered()) {
+                    ImGui::BeginTooltip();
+                    ImGui::Text("%s", texture.c_str());
+                    ImGui::EndTooltip();
                 }
             }
 
@@ -508,7 +552,7 @@ bool WindowSystem::RenderMaterialDialog(MaterialSelection& materialSelection,
                               SUPPORTED_TEXTURE_EXTENSIONS.end(),
                               extension)
                     == SUPPORTED_TEXTURE_EXTENSIONS.end()) {
-                    Log::Error("Nepodporovaný formát textury:" + texture);
+                    Log::Error("Unsuported texture format:" + texture);
                     s_showTextureErrorWindow = true;
                     ImGui::EndTabBar();
                     ImGui::End();

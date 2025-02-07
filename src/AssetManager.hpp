@@ -31,7 +31,7 @@ enum class Assets : uint8_t {
 class AssetManager {
   public:
     [[nodiscard]] static const std::filesystem::path GetAssetPath(Assets asset);
-
+    [[nodiscard]] static const std::filesystem::path GetAppSettingsPath();
   private:
     static std::filesystem::path s_assetsFolder;
     static void FindAssetFolder();

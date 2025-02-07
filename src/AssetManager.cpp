@@ -39,6 +39,22 @@ const std::filesystem::path AssetManager::GetAssetPath(Assets asset) {
     }
 }
 
+const std::filesystem::path AssetManager::GetAppSettingsPath()
+{
+#ifdef _WIN32
+    const char* appData = std::getenv("APPDATA");
+    if (appData) {
+        return std::filesystem::path(appData) / "3DViewer" / "settings.json";
+    }
+#else
+    const char* home = std::getenv("HOME");
+    if (home) {
+        return std::filesystem::path(home) / ".3DViewer" / "settings.json";
+    }
+#endif
+    PANIC("Unable to determine settings file path");
+}
+
 void AssetManager::FindAssetFolder() {
     if (!s_assetsFolder.empty()) {
         return;

@@ -1,8 +1,12 @@
 #pragma once
 #include "LocaleKeys.hpp"
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
+
+Language LanguageFromString(const std::string& language);
+const std::string LanguageToString(Language language);
 
 class Locale {
   public:
@@ -12,5 +16,5 @@ class Locale {
   private:
     static void LoadLocale(const std::string& localePath);
     static std::vector<std::string> s_localeKeys;
-    static Language s_currentLanguage;
+    static std::optional<Language> s_currentLanguage;
 };

@@ -41,6 +41,10 @@ include_directories(SYSTEM ${GLFW_DIR}/include)
 include_directories(SYSTEM dependencies/glm/)
 ##
 
+# Cereal
+include_directories(SYSTEM dependencies/cereal/include)
+##
+
 # stb_image
 include_directories(SYSTEM dependencies/stb_image/src)
 ##

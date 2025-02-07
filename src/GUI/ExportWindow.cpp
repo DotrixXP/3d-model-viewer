@@ -1,6 +1,7 @@
 #include "ExportWindow.hpp"
 #include <imgui.h>
 #include "../Tools/FileDialog.hpp"
+#include "../Locale/Locale.hpp"
 
 ExportWindow::ExportWindow()
     : m_readyToExport(false)
@@ -23,12 +24,12 @@ void ExportWindow::Render() {
     if (!m_open)
         return;
 
-    ImGui::Begin("Export",
+    ImGui::Begin(Locale::GetText(LocaleKey::EXPORT_MODEL),
                  &m_open,
                  ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
                      | ImGuiWindowFlags_AlwaysAutoResize);
 
-    ImGui::Text("Select Export Format:");
+    ImGui::Text("%s", Locale::GetText(LocaleKey::SELECT_EXPORT_FORMAT));
 
     if (ImGui::RadioButton("DAE (Collada)", m_exportFormat == ExportFormat::DAE)) {
         m_exportFormat = ExportFormat::DAE;
@@ -36,11 +37,17 @@ void ExportWindow::Render() {
     if (ImGui::RadioButton("STL", m_exportFormat == ExportFormat::STL)) {
         m_exportFormat = ExportFormat::STL;
     }
+    if (ImGui::RadioButton("STLB", m_exportFormat == ExportFormat::STLB)) {
+        m_exportFormat = ExportFormat::STLB;
+    }
     if (ImGui::RadioButton("OBJ", m_exportFormat == ExportFormat::OBJ)) {
         m_exportFormat = ExportFormat::OBJ;
     }
     if (ImGui::RadioButton("PLY", m_exportFormat == ExportFormat::PLY)) {
         m_exportFormat = ExportFormat::PLY;
+    }
+    if (ImGui::RadioButton("PLYB", m_exportFormat == ExportFormat::PLYB)) {
+        m_exportFormat = ExportFormat::PLYB;
     }
     if (ImGui::RadioButton("X", m_exportFormat == ExportFormat::X)) {
         m_exportFormat = ExportFormat::X;
@@ -57,11 +64,17 @@ void ExportWindow::Render() {
     if (ImGui::RadioButton("STEP", m_exportFormat == ExportFormat::STEP)) {
         m_exportFormat = ExportFormat::STEP;
     }
-    if (ImGui::RadioButton("PBRTv4", m_exportFormat == ExportFormat::PBRTv4)) {
-        m_exportFormat = ExportFormat::PBRTv4;
-    }
-    if (ImGui::RadioButton("glTF 2.0 (partial)", m_exportFormat == ExportFormat::GLTF2)) {
+    if (ImGui::RadioButton("glTF 2.0 (partial, experimental)", m_exportFormat == ExportFormat::GLTF2)) {
         m_exportFormat = ExportFormat::GLTF2;
+    }
+    if (ImGui::RadioButton("glTF 2.0 Binary (partial, experimental)", m_exportFormat == ExportFormat::GLB2)) {
+        m_exportFormat = ExportFormat::GLB2;
+    }
+    if (ImGui::RadioButton("glTF 1.0 (partial, experimental)", m_exportFormat == ExportFormat::GLTF1)) {
+        m_exportFormat = ExportFormat::GLTF1;
+    }
+    if (ImGui::RadioButton("glTF 1.0 Binary (partial, experimental)", m_exportFormat == ExportFormat::GLB1)) {
+        m_exportFormat = ExportFormat::GLB1;
     }
     if (ImGui::RadioButton("3MF (experimental)", m_exportFormat == ExportFormat::_3MF)) {
         m_exportFormat = ExportFormat::_3MF;
@@ -72,17 +85,17 @@ void ExportWindow::Render() {
 
     ImGui::Separator();
 
-    if (ImGui::Button("Select Path")) {
+    if (ImGui::Button(Locale::GetText(LocaleKey::SELECT_EXPORT_MODEL_PATH))) {
         m_exportPath = FileDialogManager::GetInstance().InvokeFolderDialog();
     }
-    std::string msg = "Export Path: ";
+    std::string msg = Locale::GetText(LocaleKey::FILE_PATH);
     msg += m_exportPath.empty() ? std::string("None") : m_exportPath.string();
 
-    ImGui::InputText("File Name", m_fileName, IM_ARRAYSIZE(m_fileName));
+    ImGui::InputText(Locale::GetText(LocaleKey::FILE), m_fileName, IM_ARRAYSIZE(m_fileName));
     ImGui::Text("%s", msg.c_str());
     ImGui::Separator();
 
-    if (ImGui::Button("Export")) {
+    if (ImGui::Button(Locale::GetText(LocaleKey::EXPORT_MODEL))) {
         if (!m_exportPath.empty() && m_fileName[0] != '\0')
             m_readyToExport = true;
     }

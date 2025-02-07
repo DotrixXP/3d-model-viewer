@@ -5,27 +5,35 @@
 const char* ModelExporter::GetExportFormatExtension(ExportFormat format) const {
     switch (format) {
     case ExportFormat::DAE:
-        return "dae";
+        return "collada";
     case ExportFormat::STL:
         return "stl";
+    case ExportFormat::STLB:
+        return "stlb";
     case ExportFormat::OBJ:
         return "obj";
     case ExportFormat::PLY:
         return "ply";
+    case ExportFormat::PLYB:
+        return "plyb";
     case ExportFormat::X:
         return "x";
     case ExportFormat::_3DS:
         return "3ds";
     case ExportFormat::JSON:
-        return "json";
+        return "assjson";
     case ExportFormat::ASSBIN:
         return "assbin";
     case ExportFormat::STEP:
-        return "step";
-    case ExportFormat::PBRTv4:
-        return "pbrt";
+        return "stp";
     case ExportFormat::GLTF2:
+        return "gltf2";
+    case ExportFormat::GLB2:
+        return "glb2";
+    case ExportFormat::GLTF1:
         return "gltf";
+    case ExportFormat::GLB1:
+        return "glb";
     case ExportFormat::_3MF:
         return "3mf";
     case ExportFormat::FBX:
@@ -51,11 +59,20 @@ void ModelExporter::ExportModel(const Model& model,
     const char* formatExtension = GetExportFormatExtension(format);
     std::string fullPath = exportPath + "." + formatExtension;
 
-    if (m_exporter.Export(scene, formatExtension, fullPath) != AI_SUCCESS) {
-        Log::Error("Failed to export model: " + std::string(m_exporter.GetErrorString()));
-        GuiErrorWindow::RaiseError("Failed to export model, scene is empty. This is a bug.");
+    try {
+
+        if (m_exporter.Export(scene, formatExtension, fullPath) != AI_SUCCESS) {
+            Log::Error("Failed to export model: " + std::string(m_exporter.GetErrorString()));
+            GuiErrorWindow::RaiseError(
+                "Failed to export model, scene is empty. This is a bug in exporting engine.");
+        }
+        else {
+            Log::Info("Model exported successfully to: " + fullPath);
+        }
     }
-    else {
-        Log::Info("Model exported successfully to: " + fullPath);
+    catch (const std::exception& e) {
+        Log::Error("Failed to export model: " + std::string(e.what()));
+        GuiErrorWindow::RaiseError(("Model exporting failed! " + std::string(e.what())).c_str());
+        PANIC(("Model exporting failed! " + std::string(e.what())).c_str());
     }
 }

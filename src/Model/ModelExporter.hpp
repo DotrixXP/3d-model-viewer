@@ -6,17 +6,21 @@
 enum class ExportFormat : uint8_t {
     DAE, // Collada
     STL,
+    STLB,
     OBJ,
     PLY,
+    PLYB,
     X,
     _3DS,
     JSON,
     ASSBIN,
     STEP,
-    PBRTv4,
     GLTF2, // glTF 2.0 (partial)
-    _3MF,  // 3MF (experimental)
-    FBX    // FBX (experimental)
+    GLB2,
+    GLTF1,
+    GLB1,
+    _3MF, // 3MF (experimental)
+    FBX   // FBX (experimental)
 };
 
 class ModelExporter {

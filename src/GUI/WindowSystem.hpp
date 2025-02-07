@@ -37,7 +37,6 @@ class WindowSystem {
 
     static bool s_isDiffuseTexture;
     static glm::vec2 s_viewportWinSize;
-    static Language s_currentLanguage;
     inline void RenderApplicationSettings();
     inline void RenderPositionsWidgets();
     inline void RenderRendererWidgets();

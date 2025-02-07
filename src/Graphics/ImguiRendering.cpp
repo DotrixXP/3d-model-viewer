@@ -1,35 +1,57 @@
 ﻿#include "ImguiRendering.hpp"
 #include "../AssetManager.hpp"
+#include "../AppSettings.hpp"
+
+int32_t ImguiRendering::s_fontSize = 0;
+std::map<int32_t, ImFont*> ImguiRendering::s_fonts;
 
 void ImguiRendering::InitImgui(GLFWwindow* window) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     const std::string fontPath = AssetManager::GetAssetPath(Assets::UI_FONT).string();
     std::cout << "Font path: " << fontPath << '\n';
-    // Vytvoříme si instanci ImGuiIO
+
     ImGuiIO& io = ImGui::GetIO();
     ImVector<ImWchar> ranges;
     ImFontGlyphRangesBuilder builder;
-    builder.AddText("áčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ");    // Přidáme řetězec
-    builder.AddRanges(io.Fonts->GetGlyphRangesDefault()); // Přidáme jednu z výchozích sad
-    builder.BuildRanges(&ranges); // Sestavíme výsledný výsledek (seřazené sady
-                                  // se všemi jedinečnými znaky)
+    builder.AddText("áčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ");
+    builder.AddRanges(io.Fonts->GetGlyphRangesDefault());
+    builder.BuildRanges(&ranges);
 
-    auto font = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 20, nullptr, ranges.Data);
-
-    if (font == nullptr) {
-        // Font se nepodařilo načíst, zobrazíme chybovou zprávu
-        Log::Error("Nepodařilo se načíst font: " + std::string(fontPath));
-    }
-    else {
-        // Font se načetl úspěšně, nastavíme ho jako výchozí
-        io.FontDefault = font;
+    for (int size = 18; size <= 30; ++size) {
+        ImFont* font = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), size, nullptr, ranges.Data);
+        if (font == nullptr) {
+            Log::Error("Failed to load font: " + std::string(fontPath) + " with size "
+                       + std::to_string(size));
+        }
+        else {
+            s_fonts[size] = font;
+        }
     }
 
     io.Fonts->Build();
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
+
+    s_fontSize = SettingsManager::Get().GetLoadedSettings().fontSize;
+    if (s_fonts.find(s_fontSize) != s_fonts.end()) {
+        io.FontDefault = s_fonts[s_fontSize];
+    }
+}
+
+void ImguiRendering::ChangeFontSize(float newSize) {
+    int size = static_cast<int>(newSize);
+    if (s_fonts.find(size) == s_fonts.end()) {
+        Log::Error("Font size " + std::to_string(size) + " not loaded.");
+        return;
+    }
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.FontDefault = s_fonts[size];
+    s_fontSize = size;
+
+    SettingsManager::Get().SetFontSize(size);
 }
 
 void ImguiRendering::OnRenderEnd() {

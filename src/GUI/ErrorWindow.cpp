@@ -1,5 +1,6 @@
 #include "ErrorWindow.hpp"
 #include <imgui.h>
+#include "../Locale/Locale.hpp"
 
 std::string GuiErrorWindow::s_errorMessage = "";
 bool GuiErrorWindow::s_open = false;
@@ -17,31 +18,33 @@ void GuiErrorWindow::Render() {
 
         // Set the next window position and size
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-        ImGui::SetNextWindowSize(ImVec2(230, 180)); // Set the window size to be bigger and constant
 
         // Begin the window with the desired flags
-        ImGui::Begin("Error", &s_open, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+        ImGui::Begin("Error",
+                     &s_open,
+                     ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse
+                         | ImGuiWindowFlags_NoTitleBar);
 
-        // Get the window size
-        ImVec2 windowSize = ImGui::GetWindowSize();
+        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255));
+        float textWidth = ImGui::CalcTextSize(Locale::GetText(LocaleKey::UNEXPECTED_ERROR)).x;
+        float availableWidth = ImGui::GetContentRegionAvail().x;
+        ImGui::SetCursorPosX((availableWidth - textWidth) * 0.5f);
+        ImGui::Text("%s", Locale::GetText(LocaleKey::UNEXPECTED_ERROR));
 
-        // Calculate the text position to center it
-        ImVec2 textSize = ImGui::CalcTextSize(s_errorMessage.c_str());
-        ImVec2 textPos
-            = ImVec2((windowSize.x - textSize.x) * 0.5f, (windowSize.y - textSize.y) * 0.4f);
-        ImGui::SetCursorPos(textPos);
-        ImGui::TextWrapped("%s", s_errorMessage.c_str());
+        ImGui::PopStyleColor(); // Restore original text color
+        ImGui::Separator();
+
+        ImGui::Text(
+            "%s",
+            (Locale::GetText(LocaleKey::MESSAGE) + std::string(": ") + s_errorMessage).c_str());
 
         ImGui::Spacing();
         ImGui::Spacing();
 
         // Calculate the button position to center it
         float buttonWidth = 100.0f;
-        float buttonHeight = ImGui::GetFrameHeight();
-        ImVec2 buttonPos
-            = ImVec2((windowSize.x - buttonWidth) * 0.5f, (windowSize.y - buttonHeight) * 0.6f);
-        ImGui::SetCursorPos(buttonPos);
-        if (ImGui::Button("OK", ImVec2(buttonWidth, 0))) {
+        ImGui::SetCursorPosX((availableWidth - buttonWidth) * 0.5f);
+        if (ImGui::Button(Locale::GetText(LocaleKey::CLOSE), ImVec2(buttonWidth, 0))) {
             s_open = false;
         }
 
