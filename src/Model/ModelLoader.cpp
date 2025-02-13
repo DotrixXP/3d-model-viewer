@@ -1,9 +1,12 @@
 ﻿#include "ModelLoader.hpp"
 #include <assimp/postprocess.h>
+#include <cmath>
 
 ModelLoader::ModelLoader()
     : m_importer()
     , m_loading() {}
+
+std::uint32_t ModelLoader::s_postProcessingOptions = 0;
 
 void ModelLoader::TryStartModelLoading(const std::filesystem::path& modelPath) {
     // Returning only scene because creating opengl buffers cannot be done in parallel
@@ -11,8 +14,9 @@ void ModelLoader::TryStartModelLoading(const std::filesystem::path& modelPath) {
         m_loading = std::async(
             std::launch::async, [=, this]() -> std::tuple<const aiScene*, std::filesystem::path> {
                 Log::Info("Loading model in async: ", modelPath);
-                const aiScene* scene
-                    = m_importer.ReadFile(modelPath.string().c_str(), aiProcess_Triangulate);
+                const aiScene* scene = m_importer.ReadFile(
+                    modelPath.string().c_str(),
+                    aiProcess_Triangulate | aiProcess_CalcTangentSpace | s_postProcessingOptions);
 
                 if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
                     Log::Error(m_importer.GetErrorString());
@@ -25,6 +29,10 @@ void ModelLoader::TryStartModelLoading(const std::filesystem::path& modelPath) {
                 return std::make_tuple(scene, modelPath);
             });
     }
+}
+
+void ModelLoader::SetPostProcessingOptions(std::uint32_t options) {
+    s_postProcessingOptions = options;
 }
 
 std::optional<Model> ModelLoader::RetrieveLoadedModel() {
@@ -51,27 +59,6 @@ std::optional<Model> ModelLoader::RetrieveLoadedModel() {
         }
     }
     return std::nullopt;
-}
-
-void ModelLoader::OptimizeModel(Model& model, PostProcessing effect) {
-    std::vector<Mesh> meshes;
-    const aiScene* scene
-        = m_importer.ReadFile(model.m_path.string().c_str(), (aiPostProcessSteps)effect);
-
-    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-        Log::Error(m_importer.GetErrorString());
-    }
-    else {
-        Log::Info("Model: ", model.m_path, " successfully reloaded!");
-    }
-
-    ModelLoader::ProcessNode(meshes, scene->mRootNode, scene);
-
-    for (auto mesh : model.m_meshes)
-        mesh.Destroy();
-
-    model.m_meshes = meshes;
-    model.m_scene = scene;
 }
 
 void ModelLoader::ProcessNode(std::vector<Mesh>& meshes, aiNode* node, const aiScene* scene) {
@@ -104,7 +91,24 @@ Mesh ModelLoader::ProcessMesh(aiMesh* mesh) {
             verticesVector.z = mesh->mNormals[i].z;
             vertex.normal = verticesVector;
         }
+        else {
+            vertex.normal = glm::vec3(0.0f);
+        }
+        if (mesh->HasTangentsAndBitangents()) {
+            verticesVector.x = mesh->mTangents[i].x;
+            verticesVector.y = mesh->mTangents[i].y;
+            verticesVector.z = mesh->mTangents[i].z;
+            vertex.tangent = verticesVector;
 
+            verticesVector.x = mesh->mBitangents[i].x;
+            verticesVector.y = mesh->mBitangents[i].y;
+            verticesVector.z = mesh->mBitangents[i].z;
+            vertex.bitangent = verticesVector;
+        }
+        else {
+            vertex.tangent = glm::vec3(0.0f);
+            vertex.bitangent = glm::vec3(0.0f);
+        }
         if (mesh->mTextureCoords[0]) {
             glm::vec2 texturesVector;
             texturesVector.x = mesh->mTextureCoords[0][i].x;
@@ -114,6 +118,7 @@ Mesh ModelLoader::ProcessMesh(aiMesh* mesh) {
         else {
             vertex.texCoords = glm::vec2(0.0f, 0.0f);
         }
+
         vertices.push_back(vertex);
     }
 

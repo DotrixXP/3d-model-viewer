@@ -104,7 +104,6 @@ void ModelHandler::RenderSelectedModel(InputData inputData) {
                         m_waitingForUserInput = USER_INPUT::NO_INPUT;
                     }
                 }
-
                 if (m_materialSelection.specular.has_value()
                     && m_materialSelection.diffuse.has_value()) {
                     if (!m_materialSelection.specular.value().empty()) {
@@ -117,6 +116,19 @@ void ModelHandler::RenderSelectedModel(InputData inputData) {
 
                         m_model->GetMaterials().specular = Texture(
                             m_materialSelection.specular.value(), WindowSystem::s_flipTexture);
+                    }
+                }
+                if (m_materialSelection.normal.has_value()) {
+                    if (!m_materialSelection.normal.value().empty()) {
+                        Log::Info("Normal texture: " + m_materialSelection.normal.value());
+                        auto normalTex = m_model->GetMaterials().normal;
+
+                        if (normalTex.has_value()) {
+                            m_model->GetMaterials().normal.value().Destroy();
+                        }
+
+                        m_model->GetMaterials().normal = Texture(m_materialSelection.normal.value(),
+                                                                 WindowSystem::s_flipTexture);
                     }
                 }
             }

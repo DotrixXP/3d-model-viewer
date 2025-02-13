@@ -1,4 +1,5 @@
 ﻿#include "WindowSystem.hpp"
+#include "../Model/ModelLoader.hpp"
 #include "../Graphics/Renderer.hpp"
 #include "ErrorWindow.hpp"
 #include "ImGuizmo.h"
@@ -15,6 +16,7 @@ bool WindowSystem::s_flipTexture = false;
 bool WindowSystem::s_showTextureErrorWindow = false;
 bool WindowSystem::s_showModelErrorWindow = false;
 bool WindowSystem::s_showApplicationSettings = false;
+bool WindowSystem::s_showPostProcessingSettings = false;
 bool WindowSystem::s_isDiffuseTexture = true;
 
 WindowSystem::WindowSystem()
@@ -93,11 +95,18 @@ void WindowSystem::RenderWindows(bool isObjectRendered) {
     ImGui::SetWindowSize(ImVec2(screenSize.x / 1.5, screenSize.y - mainMenuBarSize.y));
     ImGui::SetWindowPos(ImVec2(0, mainMenuBarSize.y));
 
-    auto winSize = ImGui::GetWindowSize(); // Velikost okna viewportu (ImGui okna)
+    auto winSize = ImGui::GetWindowSize();
 
     winSize.y -= 40;
     if (winSize.x > 0 && winSize.y > 0)
         s_viewportWinSize = glm::vec2((uint16_t)winSize.x, (uint16_t)winSize.y);
+
+    if (s_showPostProcessingSettings) {
+        ImGui::Begin("Post processing options");
+        ImGui::Text("Post processing options are applied after model reload!");
+        RenderPostProcessingSettings();
+        ImGui::End();
+    }
 
     if (isObjectRendered)
         ImGui::Image(static_cast<ImTextureID>(Core::GetRenderTargetTexture()),
@@ -108,35 +117,48 @@ void WindowSystem::RenderWindows(bool isObjectRendered) {
 
         float textWidth = ImGui::CalcTextSize(Locale::GetText(LocaleKey::NO_MODEL_LOADED)).x;
         float textHeight = ImGui::CalcTextSize(Locale::GetText(LocaleKey::NO_MODEL_LOADED)).y;
+        if (ImGui::BeginTabBar("ModelTabs")) {
+            if (ImGui::BeginTabItem("Model loading")) {
+                ImGui::SetCursorPos(ImVec2((windowWidth - textWidth) / 2.0f,
+                                           (windowHeight - textHeight) / 2.0f - 60.f));
+                ImGui::Text("%s", Locale::GetText(LocaleKey::NO_MODEL_LOADED));
 
-        ImGui::SetCursorPos(
-            ImVec2((windowWidth - textWidth) / 2.0f, (windowHeight - textHeight) / 2.0f - 60.f));
-        ImGui::Text("%s", Locale::GetText(LocaleKey::NO_MODEL_LOADED));
+                textWidth
+                    = ImGui::CalcTextSize(Locale::GetText(LocaleKey::OPEN_MODEL_WITH_FILE_MENU)).x;
+                textHeight
+                    = ImGui::CalcTextSize(Locale::GetText(LocaleKey::OPEN_MODEL_WITH_FILE_MENU)).y;
 
-        textWidth = ImGui::CalcTextSize(Locale::GetText(LocaleKey::OPEN_MODEL_WITH_FILE_MENU)).x;
-        textHeight = ImGui::CalcTextSize(Locale::GetText(LocaleKey::OPEN_MODEL_WITH_FILE_MENU)).y;
+                ImGui::SetCursorPos(ImVec2((windowWidth - textWidth) / 2.0f,
+                                           (windowHeight - textHeight) / 2.0f - 30.f));
+                ImGui::Text("%s", Locale::GetText(LocaleKey::OPEN_MODEL_WITH_FILE_MENU));
 
-        ImGui::SetCursorPos(
-            ImVec2((windowWidth - textWidth) / 2.0f, (windowHeight - textHeight) / 2.0f - 30.f));
-        ImGui::Text("%s", Locale::GetText(LocaleKey::OPEN_MODEL_WITH_FILE_MENU));
+                ImGui::Dummy(ImVec2(0, 10));
+                ImGui::Separator();
+                ImGui::Dummy(ImVec2(0, 10));
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(30, 10));
+                ImGuiIO& io = ImGui::GetIO();
+                float fontSize = io.FontDefault->FontSize;
 
-        ImGui::Dummy(ImVec2(0, 10));
-        ImGui::Separator();
-        ImGui::Dummy(ImVec2(0, 10));
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(30, 10));
-        ImGuiIO& io = ImGui::GetIO();
-        float fontSize = io.FontDefault->FontSize;
+                float buttonWidth = fontSize * 10.0f;
+                float buttonHeight = fontSize * 3.0f;
 
-        // Calculate the button size based on the font size
-        float buttonWidth = fontSize * 10.0f; // Adjust the multiplier as needed
-        float buttonHeight = fontSize * 3.0f; // Adjust the multiplier as needed
+                ImGui::SetCursorPosX((windowWidth - buttonWidth) / 2.0f);
+                if (ImGui::Button(Locale::GetText(LocaleKey::LOAD_MODEL),
+                                  ImVec2(buttonWidth, buttonHeight))) {
+                    OpenModelSelectionDialog();
+                }
+                ImGui::PopStyleVar();
 
-        ImGui::SetCursorPosX((windowWidth - buttonWidth) / 2.0f);
-        if (ImGui::Button(Locale::GetText(LocaleKey::LOAD_MODEL),
-                          ImVec2(buttonWidth, buttonHeight))) {
-            OpenModelSelectionDialog();
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Model post processing")) {
+                RenderPostProcessingSettings();
+
+                ImGui::EndTabItem();
+            }
+
+            ImGui::EndTabBar();
         }
-        ImGui::PopStyleVar();
     }
     this->m_inputData.m_allowCameraInput
         = (ImGui::IsWindowHovered() || !Window::GetCursorVisibility()) & !m_renderGizmo;
@@ -328,7 +350,7 @@ void WindowSystem::RenderShaderSettings() {
         Locale::GetText(LocaleKey::LIGHT_INTENSITY), &m_inputData.m_lightIntensity, 0.0f, 1.0f);
     ImGui::SliderFloat(Locale::GetText(LocaleKey::MATERIAL_SHININESS),
                        &m_inputData.m_materialShininess,
-                       0.0f,
+                       1.0f,
                        256.0f);
     ImGui::DragFloat3(
         Locale::GetText(LocaleKey::LIGHT_POS), glm::value_ptr(m_inputData.m_lightPos), 1.0f);
@@ -372,11 +394,9 @@ ImVec2 WindowSystem::RenderMainMenuBar(bool isObjectRendered) {
         if (!isObjectRendered)
             ImGui::EndDisabled();
 
-        if (!isObjectRendered)
-            ImGui::BeginDisabled();
-
-        if (!isObjectRendered)
-            ImGui::EndDisabled();
+        if (ImGui::Button("Post processing options")) {
+            s_showPostProcessingSettings = !s_showPostProcessingSettings;
+        }
 
         if (m_cameraSettings.cameraType == 1) {
             ImGui::Separator();
@@ -408,6 +428,92 @@ void WindowSystem::RenderModelInfo() {
                     .c_str(),
                 Renderer::GetInstance().GetIndicesCount());
     ImGui::Separator();
+}
+
+void WindowSystem::RenderPostProcessingSettings() {
+    ImGui::Separator();
+
+    static std::uint32_t postProcessingOptions = 0;
+
+    // Render checkboxes for each PostProcessing flag
+    ImGui::CheckboxFlags("Calc Tangent Space",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::CALC_TANGENT_SPACE));
+    ImGui::CheckboxFlags("Join Identical Vertices",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::JOIN_IDENTICAL_VERTICES));
+    ImGui::CheckboxFlags("Make Left Handed",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::MAKE_LEFT_HANDED));
+    ImGui::CheckboxFlags("Triangulate",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::TRIANGULATE));
+    ImGui::CheckboxFlags("Remove Component",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::REMOVE_COMPONENT));
+    ImGui::CheckboxFlags("Generate Normals",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::GEN_NORMALS));
+    ImGui::CheckboxFlags("Generate Smooth Normals",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::GEN_SMOOTH_NORMALS));
+    ImGui::CheckboxFlags("Split Large Meshes",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::SPLIT_LARGE_MESHES));
+    ImGui::CheckboxFlags("Pre-transform Vertices",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::PRE_TRANSFORM_VERTICES));
+    ImGui::CheckboxFlags("Limit Bone Weights",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::LIMIT_BONE_WEIGHTS));
+    ImGui::CheckboxFlags("Validate Data Structure",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::VALIDATE_DATA_STRUCTURE));
+    ImGui::CheckboxFlags("Improve Cache Locality",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::IMPROVE_CACHE_LOCALITY));
+    ImGui::CheckboxFlags("Remove Redundant Materials",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::REMOVE_REDUNDANT_MATERIALS));
+    ImGui::CheckboxFlags("Fix Infacing Normals",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::FIX_INFACING_NORMALS));
+    ImGui::CheckboxFlags("Sort by pType",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::SORT_BY_PTYPE));
+    ImGui::CheckboxFlags("Find Degenerates",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::FIND_DEGENERATES));
+    ImGui::CheckboxFlags("Find Invalid Data",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::FIND_INVALID_DATA));
+    ImGui::CheckboxFlags("Generate UV Coordinates",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::GEN_UV_COORDS));
+    ImGui::CheckboxFlags("Transform UV Coordinates",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::TRANSFORM_UV_COORDS));
+    ImGui::CheckboxFlags("Find Instances",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::FIND_INSTANCES));
+    ImGui::CheckboxFlags("Optimize Meshes",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::OPTIMIZE_MESHES));
+    ImGui::CheckboxFlags("Optimize Graph",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::OPTIMIZE_GRAPH));
+    ImGui::CheckboxFlags(
+        "Flip UVs", &postProcessingOptions, static_cast<std::uint32_t>(PostProcessing::FLIP_UVS));
+    ImGui::CheckboxFlags("Flip Winding Order",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::FLIP_WINDING_ORDER));
+    ImGui::CheckboxFlags("Split by Bone Count",
+                         &postProcessingOptions,
+                         static_cast<std::uint32_t>(PostProcessing::SPLIT_BY_BONE_COUNT));
+    ImGui::CheckboxFlags(
+        "Debone", &postProcessingOptions, static_cast<std::uint32_t>(PostProcessing::DEBONE));
+
+    ModelLoader::SetPostProcessingOptions(postProcessingOptions);
 }
 
 bool WindowSystem::RenderMaterialDialog(MaterialSelection& materialSelection,
@@ -560,6 +666,56 @@ bool WindowSystem::RenderMaterialDialog(MaterialSelection& materialSelection,
                 }
                 else {
                     materialSelection.specular = texture;
+                }
+            }
+            ImGui::EndTabItem();
+        }
+
+        // Normal map is not localed cuz its easier to understand in english
+        if (ImGui::BeginTabItem("Normal map")) {
+            ImGui::Text("%s", Locale::GetText(LocaleKey::CHOOSE_SPECULAR_TEXTURE));
+
+            ImGui::BeginChild("NormalTextures",
+                              ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * textureListHeight),
+                              true);
+            for (auto& texture : textures) {
+                bool isSelected = (materialSelection.normal == texture);
+                if (ImGui::Selectable(
+                        (std::filesystem::path(texture).filename().string() + " -> Normal?")
+                            .c_str(),
+                        isSelected)) {
+                    materialSelection.normal = texture;
+                    Log::Info("Specular texture: " + texture);
+                }
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+
+                if (ImGui::IsItemHovered()) {
+                    ImGui::BeginTooltip();
+                    ImGui::Text("%s", texture.c_str());
+                    ImGui::EndTooltip();
+                }
+            }
+
+            ImGui::EndChild();
+            ImGui::Separator();
+            ImGui::Checkbox(Locale::GetText(LocaleKey::FLIP_TEXTURE), &s_flipTexture);
+            if (ImGui::Button(Locale::GetText(LocaleKey::CHOOSE_TEXTURE_MANUALLY))) {
+                auto texture = FileDialogManager::GetInstance().InvokeFileDialog();
+                std::string extension = std::filesystem::path(texture).extension().string();
+                if (std::find(SUPPORTED_TEXTURE_EXTENSIONS.begin(),
+                              SUPPORTED_TEXTURE_EXTENSIONS.end(),
+                              extension)
+                    == SUPPORTED_TEXTURE_EXTENSIONS.end()) {
+                    Log::Error("Unsuported texture format:" + texture);
+                    s_showTextureErrorWindow = true;
+                    ImGui::EndTabBar();
+                    ImGui::End();
+                    return false;
+                }
+                else {
+                    materialSelection.normal = texture;
                 }
             }
             ImGui::EndTabItem();

@@ -12,7 +12,6 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<uint32_t> indices)
 }
 
 void Mesh::SetMesh() {
-    // Generace Bufferù
     glGenVertexArrays(1, &m_VAO);
     glGenBuffers(1, &m_VBO);
     glGenBuffers(1, &m_EBO);
@@ -23,41 +22,39 @@ void Mesh::SetMesh() {
     glBufferData(GL_ARRAY_BUFFER,
                  vertices.size() * sizeof(Vertex),
                  vertices.data(),
-                 GL_STATIC_DRAW); // Data do VBO
+                 GL_STATIC_DRAW); // Data to VBO
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO); // Bind EBO
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                  indices.size() * sizeof(unsigned int),
                  indices.data(),
-                 GL_STATIC_DRAW); // Data do EBO
+                 GL_STATIC_DRAW); // Data to EBO
 
-    glEnableVertexAttribArray(0); // Aktivovat VAO na pozici 0
-    glVertexAttribPointer(0,
-                          3,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          sizeof(Vertex),
-                          reinterpret_cast<void*>(0)); // Do VAO přidat Data
-    // vertex normals
-    glEnableVertexAttribArray(1); // Aktivovat VAO na pozici 1
-    glVertexAttribPointer(1,
-                          3,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          sizeof(Vertex),
-                          reinterpret_cast<void*>(offsetof(Vertex, normal))); // Do VAO pøidat Data
+    // Position attribute
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)nullptr);
 
-    // vertex texture coords
-    glEnableVertexAttribArray(2); // Aktivovat VAO na pozici 2
+    // Normal attribute
+    glEnableVertexAttribArray(1);
     glVertexAttribPointer(
-        2,
-        2,
-        GL_FLOAT,
-        GL_FALSE,
-        sizeof(Vertex),
-        reinterpret_cast<void*>(offsetof(Vertex, texCoords))); // Do VAO přidat Data
+        1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 
-    glBindVertexArray(0); // unBind
+    // TexCoord attribute
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(
+        2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
+
+    // Tangent attribute
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(
+        3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, tangent));
+
+    // Bitangent attribute
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(
+        4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, bitangent));
+
+    glBindVertexArray(0); // Unbind VAO
 }
 
 void Mesh::DrawArrays() const {

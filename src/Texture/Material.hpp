@@ -8,19 +8,24 @@
 struct MaterialSelection {
     std::optional<std::variant<std::string, glm::vec3>> diffuse;
     std::optional<std::string> specular;
+    std::optional<std::string> normal;
 
-    MaterialSelection(std::variant<std::string, glm::vec3>, std::optional<std::string> specular);
+    MaterialSelection(std::variant<std::string, glm::vec3>,
+                      std::optional<std::string> specular,
+                      std::optional<std::string> normal);
+
     MaterialSelection();
 };
 
 struct Material {
     std::optional<std::variant<Texture, glm::vec3>> diffuse;
     std::optional<Texture> specular;
-    
+    std::optional<Texture> normal;
+
+    [[nodiscard]] std::optional<Texture> TryGetNormalTexture() const;
     [[nodiscard]] std::optional<glm::vec3> TryGetDiffuseColor() const;
     [[nodiscard]] std::optional<Texture> TryGetDiffuseTexture() const;
-    void SetDiffuse(std::variant<Texture, glm::vec3> diffuse);
-    void SetSpecular(Texture specular);
+
     [[nodiscard]] bool IsValid() const;
 
     Material(std::optional<std::variant<Texture, glm::vec3>> diffuse,

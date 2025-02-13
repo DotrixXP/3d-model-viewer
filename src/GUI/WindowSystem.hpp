@@ -37,6 +37,7 @@ class WindowSystem {
 
     static bool s_isDiffuseTexture;
     static glm::vec2 s_viewportWinSize;
+    inline void RenderPostProcessingSettings();
     inline void RenderApplicationSettings();
     inline void RenderPositionsWidgets();
     inline void RenderRendererWidgets();
@@ -56,5 +57,6 @@ class WindowSystem {
     float m_gizmoSizeMultiplier;
     static bool s_showModelErrorWindow;
     static bool s_showApplicationSettings;
+    static bool s_showPostProcessingSettings;
     static bool s_showTextureErrorWindow;
 };

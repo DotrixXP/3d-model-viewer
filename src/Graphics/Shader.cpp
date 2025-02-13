@@ -98,16 +98,26 @@ void Shader::SetMaterialUniform(const Material& material) {
     else if (diffuseTex.has_value()) {
         diffuseTex.value().Bind(0);
 
-        // Make color invalid (alpha 0)
+        // Make color invalid (alpha is 0)
         SetUniform("diffuseColor", glm::vec4(0.f));
     }
 
     if (material.specular.has_value()) {
         material.specular.value().Bind(1);
+        SetUniform("specular", 1);
         SetUniform("hasSpecularTexture", 1);
     }
     else {
         SetUniform("hasSpecularTexture", 0);
+    }
+
+    if (material.normal.has_value()) {
+        material.normal.value().Bind(2);
+        SetUniform("hasNormalMap", 1);
+        SetUniform("normalMap", 2);
+    }
+    else {
+        SetUniform("hasNormalMap", 0);
     }
 }
 

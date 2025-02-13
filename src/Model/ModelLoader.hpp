@@ -40,10 +40,10 @@ class ModelLoader {
     ~ModelLoader() = default;
     void TryStartModelLoading(const std::filesystem::path& modelPath);
     std::optional<Model> RetrieveLoadedModel();
-
-    void OptimizeModel(Model& model, PostProcessing effect);
+    static void SetPostProcessingOptions(std::uint32_t options);
 
   private:
+    static std::uint32_t s_postProcessingOptions;
     void ProcessNode(std::vector<Mesh>& meshes, aiNode* node, const aiScene* scene);
     Mesh ProcessMesh(aiMesh* mesh);
     Assimp::Importer m_importer;
