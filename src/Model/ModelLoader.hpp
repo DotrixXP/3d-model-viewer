@@ -41,7 +41,7 @@ class ModelLoader {
     void TryStartModelLoading(const std::filesystem::path& modelPath);
     std::optional<Model> RetrieveLoadedModel();
     static void SetPostProcessingOptions(std::uint32_t options);
-
+    void ReloadModel(Model& model);
   private:
     static std::uint32_t s_postProcessingOptions;
     void ProcessNode(std::vector<Mesh>& meshes, aiNode* node, const aiScene* scene);

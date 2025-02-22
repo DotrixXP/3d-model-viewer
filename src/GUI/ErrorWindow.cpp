@@ -1,5 +1,6 @@
 #include "ErrorWindow.hpp"
 #include <imgui.h>
+#include <imgui_internal.h>
 #include "../Locale/Locale.hpp"
 
 std::string GuiErrorWindow::s_errorMessage = "";
@@ -19,7 +20,10 @@ void GuiErrorWindow::Render() {
         // Set the next window position and size
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
-        // Begin the window with the desired flags
+        ImGuiWindowClass wc;
+        wc.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoDockingOverMe;
+        ImGui::SetNextWindowClass(&wc);
+
         ImGui::Begin("Error",
                      &s_open,
                      ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse

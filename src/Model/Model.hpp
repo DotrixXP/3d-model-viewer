@@ -27,7 +27,6 @@ class Model {
   private:
     Model(
         std::vector<Mesh>&& meshes, const aiScene* scene, const std::filesystem::path modelPath);
-    void LoadModel(const std::string& directoryPath);
     void ProcessNode(aiNode* node, const aiScene* scene);
 
     Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene);

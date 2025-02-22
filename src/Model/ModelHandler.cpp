@@ -41,6 +41,10 @@ void ModelHandler::LoadSelectedModel() {
 
         WindowSystem::s_newModelPath.reset();
     }
+
+    if (WindowSystem::s_modelReloadRequested) {
+        WindowSystem::s_modelReloadRequested = false;
+    }
 }
 
 const std::vector<std::string> ModelHandler::FindTexture(const std::string& modelPath) const {

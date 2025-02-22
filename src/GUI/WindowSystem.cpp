@@ -13,12 +13,14 @@
 
 glm::vec2 WindowSystem::s_viewportWinSize = glm::vec2(-1.0f);
 std::optional<std::filesystem::path> WindowSystem::s_newModelPath = std::nullopt;
+std::optional<std::filesystem::path> WindowSystem::s_lastModelPath = std::nullopt;
 bool WindowSystem::s_flipTexture = false;
 bool WindowSystem::s_showTextureErrorWindow = false;
 bool WindowSystem::s_showModelErrorWindow = false;
 bool WindowSystem::s_showApplicationSettings = false;
 bool WindowSystem::s_showPostProcessingSettings = false;
 bool WindowSystem::s_isDiffuseTexture = true;
+bool WindowSystem::s_modelReloadRequested = false;
 
 WindowSystem::WindowSystem()
     : m_inputData(glm::vec3(2.f, 0.f, -5.f), glm::vec3(1.0f), glm::vec3(1.0f), 0.0f, true)
@@ -36,7 +38,11 @@ void WindowSystem::RenderApplicationSettings() {
     static Language s_currentLanguage
         = LanguageFromString(SettingsManager::Get().GetLoadedSettings().language);
 
+    ImGuiWindowClass wc;
+    wc.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoDockingOverMe;
+    ImGui::SetNextWindowClass(&wc);
     ImGui::Begin(Locale::GetText(LocaleKey::SETTINGS), &s_showApplicationSettings);
+
     if (ImGui::BeginTabBar("SettingsTabs")) {
 
         if (ImGui::BeginTabItem(Locale::GetText(LocaleKey::LANGUAGE))) {
@@ -84,18 +90,20 @@ void WindowSystem::RenderApplicationSettings() {
 void WindowSystem::RenderWindows(bool isObjectRendered) {
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID,
                                  ImGui::GetMainViewport(),
-                                 ImGuiDockNodeFlags_PassthruCentralNode
-                                     | ImGuiDockNodeFlags_NoWindowMenuButton);
+                                 ImGuiDockNodeFlags_NoWindowMenuButton);
 
     RenderApplicationSettings();
 
     if (GuiErrorWindow::s_open)
         ImGui::BeginDisabled();
 
+    ImGuiWindowClass wc;
+    wc.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoDockingOverMe;
+    ImGui::SetNextWindowClass(&wc);
     if (ImGui::Begin(Locale::GetText(LocaleKey::VIEWPORT),
                      nullptr,
                      ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar
-                         | ImGuiWindowFlags_NoScrollWithMouse)) {
+                         | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoTitleBar)) {
 
         RenderMainMenuBar(isObjectRendered);
 
@@ -103,11 +111,7 @@ void WindowSystem::RenderWindows(bool isObjectRendered) {
         s_viewportWinSize = glm::vec2((uint16_t)winSize.x, (uint16_t)winSize.y);
 
         if (s_showPostProcessingSettings) {
-            if (ImGui::Begin("Post processing options")) {
-                ImGui::Text("Post processing options are applied after model reload!");
-                RenderPostProcessingSettings();
-                ImGui::End();
-            }
+            RenderPostProcessingSettings();
         }
 
         if (isObjectRendered) {
@@ -173,8 +177,11 @@ void WindowSystem::RenderWindows(bool isObjectRendered) {
 
     ImGui::End();
 
-    if (ImGui::Begin(
-            Locale::GetText(LocaleKey::PROPERTIES), nullptr, ImGuiWindowFlags_NoCollapse)) {
+    wc.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoDockingOverMe;
+    ImGui::SetNextWindowClass(&wc);
+    if (ImGui::Begin(Locale::GetText(LocaleKey::PROPERTIES),
+                     nullptr,
+                     ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar)) {
 
         if (!isObjectRendered)
             ImGui::BeginDisabled();
@@ -238,6 +245,7 @@ void WindowSystem::OpenModelSelectionDialog() {
     if (std::find(SUPPORTED_MODEL_EXTENSIONS.begin(), SUPPORTED_MODEL_EXTENSIONS.end(), extension)
         != SUPPORTED_MODEL_EXTENSIONS.end()) {
         s_newModelPath = path;
+        s_lastModelPath = path;
     }
     else {
         s_showModelErrorWindow = true;
@@ -409,89 +417,104 @@ void WindowSystem::RenderModelInfo() {
 }
 
 void WindowSystem::RenderPostProcessingSettings() {
-    ImGui::Separator();
+    ImGuiWindowClass wc;
+    wc.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoDockingOverMe;
+    ImGui::SetNextWindowClass(&wc);
 
-    static std::uint32_t postProcessingOptions = 0;
+    if (ImGui::Begin("Post processing options")) {
+        ImGui::Text("Post processing options are applied after model reload!");
+        ImGui::Separator();
 
-    // Render checkboxes for each PostProcessing flag
-    ImGui::CheckboxFlags("Calc Tangent Space",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::CALC_TANGENT_SPACE));
-    ImGui::CheckboxFlags("Join Identical Vertices",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::JOIN_IDENTICAL_VERTICES));
-    ImGui::CheckboxFlags("Make Left Handed",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::MAKE_LEFT_HANDED));
-    ImGui::CheckboxFlags("Triangulate",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::TRIANGULATE));
-    ImGui::CheckboxFlags("Remove Component",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::REMOVE_COMPONENT));
-    ImGui::CheckboxFlags("Generate Normals",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::GEN_NORMALS));
-    ImGui::CheckboxFlags("Generate Smooth Normals",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::GEN_SMOOTH_NORMALS));
-    ImGui::CheckboxFlags("Split Large Meshes",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::SPLIT_LARGE_MESHES));
-    ImGui::CheckboxFlags("Pre-transform Vertices",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::PRE_TRANSFORM_VERTICES));
-    ImGui::CheckboxFlags("Limit Bone Weights",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::LIMIT_BONE_WEIGHTS));
-    ImGui::CheckboxFlags("Validate Data Structure",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::VALIDATE_DATA_STRUCTURE));
-    ImGui::CheckboxFlags("Improve Cache Locality",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::IMPROVE_CACHE_LOCALITY));
-    ImGui::CheckboxFlags("Remove Redundant Materials",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::REMOVE_REDUNDANT_MATERIALS));
-    ImGui::CheckboxFlags("Fix Infacing Normals",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::FIX_INFACING_NORMALS));
-    ImGui::CheckboxFlags("Sort by pType",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::SORT_BY_PTYPE));
-    ImGui::CheckboxFlags("Find Degenerates",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::FIND_DEGENERATES));
-    ImGui::CheckboxFlags("Find Invalid Data",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::FIND_INVALID_DATA));
-    ImGui::CheckboxFlags("Generate UV Coordinates",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::GEN_UV_COORDS));
-    ImGui::CheckboxFlags("Transform UV Coordinates",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::TRANSFORM_UV_COORDS));
-    ImGui::CheckboxFlags("Find Instances",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::FIND_INSTANCES));
-    ImGui::CheckboxFlags("Optimize Meshes",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::OPTIMIZE_MESHES));
-    ImGui::CheckboxFlags("Optimize Graph",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::OPTIMIZE_GRAPH));
-    ImGui::CheckboxFlags(
-        "Flip UVs", &postProcessingOptions, static_cast<std::uint32_t>(PostProcessing::FLIP_UVS));
-    ImGui::CheckboxFlags("Flip Winding Order",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::FLIP_WINDING_ORDER));
-    ImGui::CheckboxFlags("Split by Bone Count",
-                         &postProcessingOptions,
-                         static_cast<std::uint32_t>(PostProcessing::SPLIT_BY_BONE_COUNT));
-    ImGui::CheckboxFlags(
-        "Debone", &postProcessingOptions, static_cast<std::uint32_t>(PostProcessing::DEBONE));
+        static std::uint32_t postProcessingOptions = 0;
 
-    ModelLoader::SetPostProcessingOptions(postProcessingOptions);
+        // Render checkboxes for each PostProcessing flag
+        ImGui::CheckboxFlags("Calc Tangent Space",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::CALC_TANGENT_SPACE));
+        ImGui::CheckboxFlags("Join Identical Vertices",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::JOIN_IDENTICAL_VERTICES));
+        ImGui::CheckboxFlags("Make Left Handed",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::MAKE_LEFT_HANDED));
+        ImGui::CheckboxFlags("Triangulate",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::TRIANGULATE));
+        ImGui::CheckboxFlags("Remove Component",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::REMOVE_COMPONENT));
+        ImGui::CheckboxFlags("Generate Normals",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::GEN_NORMALS));
+        ImGui::CheckboxFlags("Generate Smooth Normals",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::GEN_SMOOTH_NORMALS));
+        ImGui::CheckboxFlags("Split Large Meshes",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::SPLIT_LARGE_MESHES));
+        ImGui::CheckboxFlags("Pre-transform Vertices",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::PRE_TRANSFORM_VERTICES));
+        ImGui::CheckboxFlags("Limit Bone Weights",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::LIMIT_BONE_WEIGHTS));
+        ImGui::CheckboxFlags("Validate Data Structure",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::VALIDATE_DATA_STRUCTURE));
+        ImGui::CheckboxFlags("Improve Cache Locality",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::IMPROVE_CACHE_LOCALITY));
+        ImGui::CheckboxFlags(
+            "Remove Redundant Materials",
+            &postProcessingOptions,
+            static_cast<std::uint32_t>(PostProcessing::REMOVE_REDUNDANT_MATERIALS));
+        ImGui::CheckboxFlags("Fix Infacing Normals",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::FIX_INFACING_NORMALS));
+        ImGui::CheckboxFlags("Sort by pType",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::SORT_BY_PTYPE));
+        ImGui::CheckboxFlags("Find Degenerates",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::FIND_DEGENERATES));
+        ImGui::CheckboxFlags("Find Invalid Data",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::FIND_INVALID_DATA));
+        ImGui::CheckboxFlags("Generate UV Coordinates",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::GEN_UV_COORDS));
+        ImGui::CheckboxFlags("Transform UV Coordinates",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::TRANSFORM_UV_COORDS));
+        ImGui::CheckboxFlags("Find Instances",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::FIND_INSTANCES));
+        ImGui::CheckboxFlags("Optimize Meshes",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::OPTIMIZE_MESHES));
+        ImGui::CheckboxFlags("Optimize Graph",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::OPTIMIZE_GRAPH));
+        ImGui::CheckboxFlags("Flip UVs",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::FLIP_UVS));
+        ImGui::CheckboxFlags("Flip Winding Order",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::FLIP_WINDING_ORDER));
+        ImGui::CheckboxFlags("Split by Bone Count",
+                             &postProcessingOptions,
+                             static_cast<std::uint32_t>(PostProcessing::SPLIT_BY_BONE_COUNT));
+        ImGui::CheckboxFlags(
+            "Debone", &postProcessingOptions, static_cast<std::uint32_t>(PostProcessing::DEBONE));
+
+        ModelLoader::SetPostProcessingOptions(postProcessingOptions);
+
+        ImGui::Separator();
+        if (ImGui::Button("Reload model with post processing options")) {
+        }
+
+        ImGui::End();
+    }
 }
 
 bool WindowSystem::RenderMaterialDialog(MaterialSelection& materialSelection,
@@ -505,7 +528,8 @@ bool WindowSystem::RenderMaterialDialog(MaterialSelection& materialSelection,
 
     ImGui::Begin(Locale::GetText(LocaleKey::AUTOMATIC_TEXTURE_SELECTION),
                  nullptr,
-                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize
+                     | ImGuiWindowFlags_NoDocking);
 
     const uint32_t textureListHeight = 5;
 

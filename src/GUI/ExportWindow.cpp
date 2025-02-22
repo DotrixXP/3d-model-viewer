@@ -1,5 +1,6 @@
 #include "ExportWindow.hpp"
 #include <imgui.h>
+#include <imgui_internal.h>
 #include "../Tools/FileDialog.hpp"
 #include "../Locale/Locale.hpp"
 
@@ -24,10 +25,13 @@ void ExportWindow::Render() {
     if (!m_open)
         return;
 
+    ImGuiWindowClass wc;
+    wc.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoDockingOverMe;
+    ImGui::SetNextWindowClass(&wc);
     ImGui::Begin(Locale::GetText(LocaleKey::EXPORT_MODEL),
                  &m_open,
                  ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
-                     | ImGuiWindowFlags_AlwaysAutoResize);
+                     | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDocking);
 
     ImGui::Text("%s", Locale::GetText(LocaleKey::SELECT_EXPORT_FORMAT));
 
@@ -64,16 +68,20 @@ void ExportWindow::Render() {
     if (ImGui::RadioButton("STEP", m_exportFormat == ExportFormat::STEP)) {
         m_exportFormat = ExportFormat::STEP;
     }
-    if (ImGui::RadioButton("glTF 2.0 (partial, experimental)", m_exportFormat == ExportFormat::GLTF2)) {
+    if (ImGui::RadioButton("glTF 2.0 (partial, experimental)",
+                           m_exportFormat == ExportFormat::GLTF2)) {
         m_exportFormat = ExportFormat::GLTF2;
     }
-    if (ImGui::RadioButton("glTF 2.0 Binary (partial, experimental)", m_exportFormat == ExportFormat::GLB2)) {
+    if (ImGui::RadioButton("glTF 2.0 Binary (partial, experimental)",
+                           m_exportFormat == ExportFormat::GLB2)) {
         m_exportFormat = ExportFormat::GLB2;
     }
-    if (ImGui::RadioButton("glTF 1.0 (partial, experimental)", m_exportFormat == ExportFormat::GLTF1)) {
+    if (ImGui::RadioButton("glTF 1.0 (partial, experimental)",
+                           m_exportFormat == ExportFormat::GLTF1)) {
         m_exportFormat = ExportFormat::GLTF1;
     }
-    if (ImGui::RadioButton("glTF 1.0 Binary (partial, experimental)", m_exportFormat == ExportFormat::GLB1)) {
+    if (ImGui::RadioButton("glTF 1.0 Binary (partial, experimental)",
+                           m_exportFormat == ExportFormat::GLB1)) {
         m_exportFormat = ExportFormat::GLB1;
     }
     if (ImGui::RadioButton("3MF (experimental)", m_exportFormat == ExportFormat::_3MF)) {

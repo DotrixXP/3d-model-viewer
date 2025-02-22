@@ -24,6 +24,8 @@ class WindowSystem {
     static const glm::vec2 GetViewportWinSize();
 
     static std::optional<std::filesystem::path> s_newModelPath;
+    static std::optional<std::filesystem::path> s_lastModelPath;
+    static bool s_modelReloadRequested;
 
     static bool s_flipTexture;
 
@@ -55,6 +57,7 @@ class WindowSystem {
     ImGuizmo::OPERATION m_gizmoOperation;
     bool m_renderGizmo;
     float m_gizmoSizeMultiplier;
+
     static bool s_showModelErrorWindow;
     static bool s_showApplicationSettings;
     static bool s_showPostProcessingSettings;
