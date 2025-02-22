@@ -47,7 +47,7 @@ class WindowSystem {
     inline void RenderModelErrorWindow();
     inline void RenderTextureErrorWindow();
     inline void RenderShaderSettings();
-    inline ImVec2 RenderMainMenuBar(bool isObjectRendered);
+    inline void RenderMainMenuBar(bool isObjectRendered);
     inline void OpenModelSelectionDialog();
     inline void RenderGizmoSettings();
     InputData m_inputData;

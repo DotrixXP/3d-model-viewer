@@ -6,6 +6,7 @@
 #include "imgui.h"
 #include "GuiStyle.hpp"
 #include "../AppSettings.hpp"
+#include <imgui_internal.h>
 #include <ranges>
 #include <utility>
 #include <variant>
@@ -29,135 +30,126 @@ WindowSystem::WindowSystem()
 }
 
 void WindowSystem::RenderApplicationSettings() {
+    if (!s_showApplicationSettings) {
+        return;
+    }
     static Language s_currentLanguage
         = LanguageFromString(SettingsManager::Get().GetLoadedSettings().language);
 
-    if (ImGui::Begin(Locale::GetText(LocaleKey::SETTINGS),
-                     nullptr,
-                     ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
+    ImGui::Begin(Locale::GetText(LocaleKey::SETTINGS), &s_showApplicationSettings);
+    if (ImGui::BeginTabBar("SettingsTabs")) {
 
-        if (ImGui::BeginTabBar("SettingsTabs")) {
+        if (ImGui::BeginTabItem(Locale::GetText(LocaleKey::LANGUAGE))) {
+            ImGui::Text("%s", Locale::GetText(LocaleKey::CHOOSE_LANGUAGE));
 
-            if (ImGui::BeginTabItem(Locale::GetText(LocaleKey::LANGUAGE))) {
-                ImGui::Text("%s", Locale::GetText(LocaleKey::CHOOSE_LANGUAGE));
-
-                if (ImGui::RadioButton(Locale::GetText(LocaleKey::CZECH),
-                                       s_currentLanguage == Language::CZECH)) {
-                    s_currentLanguage = Language::CZECH;
-                    Locale::SetLanguage(s_currentLanguage);
-                }
-                if (ImGui::RadioButton(Locale::GetText(LocaleKey::ENGLISH),
-                                       s_currentLanguage == Language::ENGLISH)) {
-                    s_currentLanguage = Language::ENGLISH;
-                    Locale::SetLanguage(s_currentLanguage);
-                }
-
-                ImGui::EndTabItem();
+            if (ImGui::RadioButton(Locale::GetText(LocaleKey::CZECH),
+                                   s_currentLanguage == Language::CZECH)) {
+                s_currentLanguage = Language::CZECH;
+                Locale::SetLanguage(s_currentLanguage);
             }
+            if (ImGui::RadioButton(Locale::GetText(LocaleKey::ENGLISH),
+                                   s_currentLanguage == Language::ENGLISH)) {
+                s_currentLanguage = Language::ENGLISH;
+                Locale::SetLanguage(s_currentLanguage);
+            }
+            ImGui::EndTabItem();
+        }
 
-            if (ImGui::BeginTabItem(Locale::GetText(LocaleKey::DISPLAY))) {
-                ImGui::Text("%s", Locale::GetText(LocaleKey::FONT_SIZE));
-                static int fontSize = SettingsManager::Get().GetLoadedSettings().fontSize;
+        if (ImGui::BeginTabItem(Locale::GetText(LocaleKey::DISPLAY))) {
+            ImGui::Text("%s", Locale::GetText(LocaleKey::FONT_SIZE));
+            static int fontSize = SettingsManager::Get().GetLoadedSettings().fontSize;
 
-                ImGui::SliderInt(Locale::GetText(LocaleKey::SET_FONT_SIZE), &fontSize, 18, 30);
+            if (ImGui::SliderInt(Locale::GetText(LocaleKey::SET_FONT_SIZE), &fontSize, 18, 30)) {
                 ImguiRendering::ChangeFontSize(fontSize);
-                ImGui::EndTabItem();
             }
-
-            ImGui::EndTabBar();
+            ImGui::EndTabItem();
         }
 
-        ImGui::Separator();
-        float windowWidth = ImGui::GetWindowSize().x;
-        float buttonWidth = ImGui::CalcTextSize(Locale::GetText(LocaleKey::CLOSE)).x
-                            + ImGui::GetStyle().FramePadding.x * 2.0f;
-        ImGui::SetCursorPosX((windowWidth - buttonWidth) * 0.5f);
-
-        if (ImGui::Button(Locale::GetText(LocaleKey::CLOSE), ImVec2(buttonWidth, 0))) {
-            s_showApplicationSettings = false;
-        }
-
-        ImGui::End();
+        ImGui::EndTabBar();
     }
+
+    ImGui::Separator();
+    float windowWidth = ImGui::GetWindowSize().x;
+    float buttonWidth = ImGui::CalcTextSize(Locale::GetText(LocaleKey::CLOSE)).x
+                        + ImGui::GetStyle().FramePadding.x * 2.0f;
+    ImGui::SetCursorPosX((windowWidth - buttonWidth) * 0.5f);
+
+    if (ImGui::Button(Locale::GetText(LocaleKey::CLOSE), ImVec2(buttonWidth, 0))) {
+        s_showApplicationSettings = false;
+    }
+
+    ImGui::End();
 }
 
 void WindowSystem::RenderWindows(bool isObjectRendered) {
+    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID,
+                                 ImGui::GetMainViewport(),
+                                 ImGuiDockNodeFlags_PassthruCentralNode
+                                     | ImGuiDockNodeFlags_NoWindowMenuButton);
+
+    RenderApplicationSettings();
+
     if (GuiErrorWindow::s_open)
         ImGui::BeginDisabled();
 
-    ImVec2 mainMenuBarSize = this->RenderMainMenuBar(isObjectRendered);
-    ImVec2 screenSize = ImGui::GetIO().DisplaySize;
-    ImGui::Begin(Locale::GetText(LocaleKey::VIEWPORT),
-                 nullptr,
-                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
-                     | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse
-                     | ImGuiWindowFlags_NoBringToFrontOnFocus);
-    ImGui::SetWindowSize(ImVec2(screenSize.x / 1.5, screenSize.y - mainMenuBarSize.y));
-    ImGui::SetWindowPos(ImVec2(0, mainMenuBarSize.y));
+    if (ImGui::Begin(Locale::GetText(LocaleKey::VIEWPORT),
+                     nullptr,
+                     ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar
+                         | ImGuiWindowFlags_NoScrollWithMouse)) {
 
-    auto winSize = ImGui::GetWindowSize();
+        RenderMainMenuBar(isObjectRendered);
 
-    winSize.y -= 40;
-    if (winSize.x > 0 && winSize.y > 0)
+        auto winSize = ImGui::GetWindowSize();
         s_viewportWinSize = glm::vec2((uint16_t)winSize.x, (uint16_t)winSize.y);
 
-    if (s_showPostProcessingSettings) {
-        ImGui::Begin("Post processing options");
-        ImGui::Text("Post processing options are applied after model reload!");
-        RenderPostProcessingSettings();
-        ImGui::End();
-    }
-
-    if (isObjectRendered)
-        ImGui::Image(static_cast<ImTextureID>(Core::GetRenderTargetTexture()),
-                     ImVec2(s_viewportWinSize.x, s_viewportWinSize.y));
-    else {
-        float windowWidth = ImGui::GetWindowSize().x;
-        float windowHeight = ImGui::GetWindowSize().y;
-
-        float textWidth = ImGui::CalcTextSize(Locale::GetText(LocaleKey::NO_MODEL_LOADED)).x;
-        float textHeight = ImGui::CalcTextSize(Locale::GetText(LocaleKey::NO_MODEL_LOADED)).y;
-        if (ImGui::BeginTabBar("ModelTabs")) {
-            if (ImGui::BeginTabItem("Model loading")) {
-                ImGui::SetCursorPos(ImVec2((windowWidth - textWidth) / 2.0f,
-                                           (windowHeight - textHeight) / 2.0f - 60.f));
-                ImGui::Text("%s", Locale::GetText(LocaleKey::NO_MODEL_LOADED));
-
-                textWidth
-                    = ImGui::CalcTextSize(Locale::GetText(LocaleKey::OPEN_MODEL_WITH_FILE_MENU)).x;
-                textHeight
-                    = ImGui::CalcTextSize(Locale::GetText(LocaleKey::OPEN_MODEL_WITH_FILE_MENU)).y;
-
-                ImGui::SetCursorPos(ImVec2((windowWidth - textWidth) / 2.0f,
-                                           (windowHeight - textHeight) / 2.0f - 30.f));
-                ImGui::Text("%s", Locale::GetText(LocaleKey::OPEN_MODEL_WITH_FILE_MENU));
-
-                ImGui::Dummy(ImVec2(0, 10));
-                ImGui::Separator();
-                ImGui::Dummy(ImVec2(0, 10));
-                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(30, 10));
-                ImGuiIO& io = ImGui::GetIO();
-                float fontSize = io.FontDefault->FontSize;
-
-                float buttonWidth = fontSize * 10.0f;
-                float buttonHeight = fontSize * 3.0f;
-
-                ImGui::SetCursorPosX((windowWidth - buttonWidth) / 2.0f);
-                if (ImGui::Button(Locale::GetText(LocaleKey::LOAD_MODEL),
-                                  ImVec2(buttonWidth, buttonHeight))) {
-                    OpenModelSelectionDialog();
-                }
-                ImGui::PopStyleVar();
-
-                ImGui::EndTabItem();
-            }
-            if (ImGui::BeginTabItem("Model post processing")) {
+        if (s_showPostProcessingSettings) {
+            if (ImGui::Begin("Post processing options")) {
+                ImGui::Text("Post processing options are applied after model reload!");
                 RenderPostProcessingSettings();
-
-                ImGui::EndTabItem();
+                ImGui::End();
             }
+        }
 
-            ImGui::EndTabBar();
+        if (isObjectRendered) {
+            ImGui::Image(static_cast<ImTextureID>(Core::GetRenderTargetTexture()),
+                         ImVec2(s_viewportWinSize.x, s_viewportWinSize.y));
+        }
+        else {
+            float windowWidth = ImGui::GetWindowSize().x;
+            float windowHeight = ImGui::GetWindowSize().y;
+
+            float textWidth = ImGui::CalcTextSize(Locale::GetText(LocaleKey::NO_MODEL_LOADED)).x;
+            float textHeight = ImGui::CalcTextSize(Locale::GetText(LocaleKey::NO_MODEL_LOADED)).y;
+
+            ImGui::SetCursorPos(ImVec2((windowWidth - textWidth) / 2.0f,
+                                       (windowHeight - textHeight) / 2.0f - 60.f));
+            ImGui::Text("%s", Locale::GetText(LocaleKey::NO_MODEL_LOADED));
+
+            textWidth
+                = ImGui::CalcTextSize(Locale::GetText(LocaleKey::OPEN_MODEL_WITH_FILE_MENU)).x;
+            textHeight
+                = ImGui::CalcTextSize(Locale::GetText(LocaleKey::OPEN_MODEL_WITH_FILE_MENU)).y;
+
+            ImGui::SetCursorPos(ImVec2((windowWidth - textWidth) / 2.0f,
+                                       (windowHeight - textHeight) / 2.0f - 30.f));
+            ImGui::Text("%s", Locale::GetText(LocaleKey::OPEN_MODEL_WITH_FILE_MENU));
+
+            ImGui::Dummy(ImVec2(0, 10));
+            ImGui::Separator();
+            ImGui::Dummy(ImVec2(0, 10));
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(30, 10));
+            ImGuiIO& io = ImGui::GetIO();
+            float fontSize = io.FontDefault->FontSize;
+
+            float buttonWidth = fontSize * 10.0f;
+            float buttonHeight = fontSize * 3.0f;
+
+            ImGui::SetCursorPosX((windowWidth - buttonWidth) / 2.0f);
+            if (ImGui::Button(Locale::GetText(LocaleKey::LOAD_MODEL),
+                              ImVec2(buttonWidth, buttonHeight))) {
+                OpenModelSelectionDialog();
+            }
+            ImGui::PopStyleVar();
         }
     }
     this->m_inputData.m_allowCameraInput
@@ -181,42 +173,33 @@ void WindowSystem::RenderWindows(bool isObjectRendered) {
 
     ImGui::End();
 
-    ImGui::Begin(Locale::GetText(LocaleKey::PROPERTIES),
-                 nullptr,
-                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
-                     | ImGuiWindowFlags_NoBringToFrontOnFocus);
+    if (ImGui::Begin(
+            Locale::GetText(LocaleKey::PROPERTIES), nullptr, ImGuiWindowFlags_NoCollapse)) {
 
-    ImGui::SetWindowSize(
-        ImVec2(screenSize.x - screenSize.x / 1.5, screenSize.y - mainMenuBarSize.y));
-    ImGui::SetWindowPos(ImVec2(screenSize.x / 1.5, mainMenuBarSize.y));
+        if (!isObjectRendered)
+            ImGui::BeginDisabled();
 
-    if (!isObjectRendered)
-        ImGui::BeginDisabled();
+        RenderClearColorPicker();
+        RenderRendererWidgets();
+        RenderModelInfo();
 
-    RenderClearColorPicker();
-    RenderRendererWidgets();
-    RenderModelInfo();
+        ImGui::Separator();
+        if (m_renderGizmo)
+            ImGui::BeginDisabled();
+        RenderCameraSettings();
+        if (m_renderGizmo)
+            ImGui::EndDisabled();
 
-    ImGui::Separator();
-    if (m_renderGizmo)
-        ImGui::BeginDisabled();
-    RenderCameraSettings();
-    if (m_renderGizmo)
-        ImGui::EndDisabled();
+        RenderGizmoSettings();
+        RenderShaderSettings();
 
-    RenderGizmoSettings();
-    RenderShaderSettings();
+        if (!isObjectRendered)
+            ImGui::EndDisabled();
 
-    if (!isObjectRendered)
-        ImGui::EndDisabled();
-
-    RenderModelErrorWindow();
-    RenderTextureErrorWindow();
-    ImGui::End();
-
-    if (s_showApplicationSettings) {
-        RenderApplicationSettings();
+        RenderModelErrorWindow();
+        RenderTextureErrorWindow();
     }
+    ImGui::End();
 
     if (GuiErrorWindow::s_open)
         ImGui::EndDisabled();
@@ -361,12 +344,8 @@ void WindowSystem::RenderShaderSettings() {
     ImGui::Separator();
 }
 
-ImVec2 WindowSystem::RenderMainMenuBar(bool isObjectRendered) {
-    ImVec2 mainMenuBarSize = ImVec2(0, 0);
-
+void WindowSystem::RenderMainMenuBar(bool isObjectRendered) {
     if (ImGui::BeginMainMenuBar()) {
-        mainMenuBarSize = ImGui::GetWindowSize();
-
         if (ImGui::BeginMenu(Locale::GetText(LocaleKey::FILE))) {
             if (ImGui::MenuItem(Locale::GetText(LocaleKey::OPEN))) {
                 WindowSystem::OpenModelSelectionDialog();
@@ -407,7 +386,6 @@ ImVec2 WindowSystem::RenderMainMenuBar(bool isObjectRendered) {
 
         ImGui::EndMainMenuBar();
     }
-    return mainMenuBarSize;
 }
 
 void WindowSystem::RenderClearColorPicker() {

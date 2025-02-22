@@ -12,6 +12,7 @@ void ImguiRendering::InitImgui(GLFWwindow* window) {
     std::cout << "Font path: " << fontPath << '\n';
 
     ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     ImVector<ImWchar> ranges;
     ImFontGlyphRangesBuilder builder;
     builder.AddText("áčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ");
