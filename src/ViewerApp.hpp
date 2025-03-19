@@ -29,6 +29,7 @@ inline void ViewerApp::Run(const std::string& initialModelPath) {
     OpenglData::SetDepthTesting(true);
     WindowSystem windowsSystem;
 
+    glEnable(GL_MULTISAMPLE);
     ModelHandler modelHandler;
     while (!Window::WindowShouldClose()) {
         auto inputData = windowsSystem.GetInputData();

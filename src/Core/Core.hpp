@@ -10,16 +10,20 @@
 class Core {
   private:
     static glm::vec3 s_backgroundColor;
-    static GLuint s_render_target_texture;     // Tektura, do které se vyrenderuje scéna
-    static GLuint s_render_target_framebuffer; // Framebuffer, do kterého se
-                                               // vyrenderuje scéna
-    static GLuint s_render_target_depthbuffer; // Depthbuffer, do kterého se
-                                               // vyrenderuje scéna
+    static GLuint s_render_target_texture;
+    static GLuint s_render_target_framebuffer;
+
+    static GLuint s_render_target_multisample_texture;
+    static GLuint s_render_target_multisample_framebuffer;
+    static GLuint s_render_target_depthbuffer;
+
     static glm::vec2 s_framebufferSize;
     static void CreateRenderTargets(int32_t width, int32_t height);
     static void RecreateTargetTexture(int32_t width, int32_t height);
 
   public:
+    static void CreateMultisampleRenderTargets(int32_t width, int32_t height);
+    static void RecreateMultisampleTargetTexture(int32_t width, int32_t height);
     static void StartRenderingToTexture(glm::vec2 viewportSize);
     static void FinishRenderingToTexture();
     static bool InitEngine();
