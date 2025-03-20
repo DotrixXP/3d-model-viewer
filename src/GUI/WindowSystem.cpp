@@ -68,6 +68,22 @@ void WindowSystem::RenderApplicationSettings() {
             if (ImGui::SliderInt(Locale::GetText(LocaleKey::SET_FONT_SIZE), &fontSize, 18, 30)) {
                 ImguiRendering::ChangeFontSize(fontSize);
             }
+
+            ImGui::Text("%s", "Antialiasing");
+            static int msaaSamples = Core::GetMsaaSamples();
+            if (ImGui::RadioButton("MSAA x2", msaaSamples == 2)) {
+                msaaSamples = 2;
+                Core::SetMsaaSamples(2);
+            }
+            if (ImGui::RadioButton("MSAA x4", msaaSamples == 4)) {
+                msaaSamples = 4;
+                Core::SetMsaaSamples(4);
+            }
+            if (ImGui::RadioButton("MSAA x8", msaaSamples == 8)) {
+                msaaSamples = 8;
+                Core::SetMsaaSamples(8);
+            }
+
             ImGui::EndTabItem();
         }
 

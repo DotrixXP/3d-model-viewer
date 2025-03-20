@@ -18,6 +18,7 @@ class Core {
     static GLuint s_render_target_depthbuffer;
 
     static glm::vec2 s_framebufferSize;
+    static uint8_t s_msaaSamples;
     static void CreateRenderTargets(int32_t width, int32_t height);
     static void RecreateTargetTexture(int32_t width, int32_t height);
 
@@ -27,11 +28,13 @@ class Core {
     static void StartRenderingToTexture(glm::vec2 viewportSize);
     static void FinishRenderingToTexture();
     static bool InitEngine();
+    static void SetMsaaSamples(uint8_t samples);
     static void OnRenderStart();
     static void OnRenderEnd();
     static void UpdateVariables();
     static void ClearBuffers(bool whiteBackground = false);
     static void SetBackgroundColor(const glm::vec3& color);
     static GLuint GetRenderTargetTexture();
+    static uint8_t GetMsaaSamples();
     static GLuint GetRenderTargetFramebuffer();
 };

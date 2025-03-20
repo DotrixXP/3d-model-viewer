@@ -8,12 +8,27 @@ GLuint Core::s_render_target_depthbuffer = 0;
 
 GLuint Core::s_render_target_multisample_texture = 0;
 GLuint Core::s_render_target_multisample_framebuffer = 0;
+uint8_t Core::s_msaaSamples = 8;
 
 glm::vec2 Core::s_framebufferSize = glm::vec2(500, 500);
 
 constexpr uint32_t DEFAULT_WIDTH = 1280;
 constexpr uint32_t DEFAULT_HEIGHT = 720;
-constexpr uint32_t MSAA_SAMPLES = 8;
+
+void Core::SetMsaaSamples(uint8_t samples) {
+    if (samples < 1 || samples > 8 || samples % 2 != 0) {
+        Log::Error("Invalid MSAA samples count");
+        return;
+    }
+
+    s_msaaSamples = samples;
+    RecreateMultisampleTargetTexture(s_framebufferSize.x, s_framebufferSize.y);
+}
+
+uint8_t Core::GetMsaaSamples() {
+    return s_msaaSamples;
+}
+
 bool Core::InitEngine() {
     auto result = OpenglAPI::InitOpenglAPI();
     CreateMultisampleRenderTargets(DEFAULT_WIDTH, DEFAULT_HEIGHT);
@@ -36,7 +51,7 @@ void Core::CreateMultisampleRenderTargets(int32_t width, int32_t height) {
     glGenTextures(1, &s_render_target_multisample_texture);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, s_render_target_multisample_texture);
     glTexImage2DMultisample(
-        GL_TEXTURE_2D_MULTISAMPLE, MSAA_SAMPLES, GL_RGB, width, height, GL_TRUE);
+        GL_TEXTURE_2D_MULTISAMPLE, s_msaaSamples, GL_RGB, width, height, GL_TRUE);
 
     glGenFramebuffers(1, &s_render_target_multisample_framebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, s_render_target_multisample_framebuffer);
@@ -49,7 +64,7 @@ void Core::CreateMultisampleRenderTargets(int32_t width, int32_t height) {
     glGenRenderbuffers(1, &s_render_target_depthbuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, s_render_target_depthbuffer);
     glRenderbufferStorageMultisample(
-        GL_RENDERBUFFER, MSAA_SAMPLES, GL_DEPTH24_STENCIL8, width, height);
+        GL_RENDERBUFFER, s_msaaSamples, GL_DEPTH24_STENCIL8, width, height);
     glFramebufferRenderbuffer(
         GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, s_render_target_depthbuffer);
 
