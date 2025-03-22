@@ -41,11 +41,11 @@ void main()
 
     if (diffuseColor.a > 0.0) {
         // Use the diffuseColor uniform for coloring
-        ambientComponent = 0.1 * vec3(diffuseColor);
+        ambientComponent = 0.6 * vec3(diffuseColor);
         diffuseComponent = diff * vec3(diffuseColor);
     } else {
         // Use the diffuse texture for coloring
-        ambientComponent = 0.1 * vec3(texture(diffuseTexture, TexCoord));
+        ambientComponent = 0.6 * vec3(texture(diffuseTexture, TexCoord));
         diffuseComponent = diff * vec3(texture(diffuseTexture, TexCoord));
     }
 
