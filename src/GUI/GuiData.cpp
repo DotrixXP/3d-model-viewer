@@ -26,7 +26,6 @@ InputData::InputData(glm::vec3 modelPos,
     model = glm::scale(model, modelScale);
 }
 
-
 PolygonMode InputData::GetPolygonMode() const {
     return m_polygonMode;
 }

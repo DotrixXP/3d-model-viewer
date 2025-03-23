@@ -78,4 +78,6 @@ enum class LocaleKey : uint32_t {
     SELECT_EXPORT_MODEL_PATH,
     UNEXPECTED_ERROR,
     MESSAGE,
+    LINE_WIDTH,
+    POINT_SIZE,
 };

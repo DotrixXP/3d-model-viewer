@@ -8,6 +8,8 @@ class OpenglData {
     static bool s_blending;
     static bool s_faceCulling;
     static bool s_colorBuffer;
+    static float s_pointSize;
+    static float s_lineWidth;
 
   public:
     static void SetBlending(bool value);
@@ -16,7 +18,13 @@ class OpenglData {
     static void SetStencilTesting(bool value);
     static void SetColorBuffer(bool value);
     static void SetPolygonMode(int mode);
+    
 
+    static void SetPointSize(float size);
+    static void SetLineWidth(float width);
+    
+    static float GetPointSize();
+    static float GetLineWidth();
     static bool GetDepthTesting();
     static bool GetStencilTesting();
     static bool GetFaceCulling();

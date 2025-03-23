@@ -237,14 +237,47 @@ void WindowSystem::RenderRendererWidgets() {
                            m_inputData.m_polygonMode == PolygonMode::FILL)) {
         m_inputData.m_polygonMode = PolygonMode::FILL;
     }
+
+    ImGui::Separator();
     if (ImGui::RadioButton(Locale::GetText(LocaleKey::WIREFRAME_MODE),
                            m_inputData.m_polygonMode == PolygonMode::LINE)) {
         m_inputData.m_polygonMode = PolygonMode::LINE;
     }
+
+    static float lineWidth = 1.0f;
+    
+    if(m_inputData.m_polygonMode != PolygonMode::LINE)
+        ImGui::BeginDisabled();
+    
+
+    if (ImGui::SliderFloat(Locale::GetText(LocaleKey::LINE_WIDTH), &lineWidth, 1.0f, 5.0f)) {
+        if (lineWidth != OpenglData::GetLineWidth())
+            OpenglData::SetLineWidth(lineWidth);
+    }
+
+    if(m_inputData.m_polygonMode != PolygonMode::LINE)
+        ImGui::EndDisabled();
+    
+    ImGui::Separator();
+
     if (ImGui::RadioButton(Locale::GetText(LocaleKey::POINTS_MODE),
                            m_inputData.m_polygonMode == PolygonMode::POINT)) {
         m_inputData.m_polygonMode = PolygonMode::POINT;
     }
+
+    static float pointSize = 1.0f;
+    
+    if(m_inputData.m_polygonMode != PolygonMode::POINT)
+        ImGui::BeginDisabled();
+
+    if (ImGui::SliderFloat(Locale::GetText(LocaleKey::POINT_SIZE), &pointSize, 1.0f, 10.0f)) {
+        if (pointSize != OpenglData::GetPointSize())
+            OpenglData::SetPointSize(pointSize);
+    }
+
+    if(m_inputData.m_polygonMode != PolygonMode::POINT)
+        ImGui::EndDisabled();
+    ImGui::Separator();
 }
 
 void WindowSystem::OpenModelSelectionDialog() {
@@ -354,10 +387,10 @@ void WindowSystem::RenderShaderSettings() {
     }
 
     ImGui::SliderFloat(
-        Locale::GetText(LocaleKey::LIGHT_INTENSITY), &m_inputData.m_lightIntensity, 0.0f, 1.0f);
+        Locale::GetText(LocaleKey::LIGHT_INTENSITY), &m_inputData.m_lightIntensity, 0.0f, 2.0f);
     ImGui::SliderFloat(Locale::GetText(LocaleKey::MATERIAL_SHININESS),
                        &m_inputData.m_materialShininess,
-                       1.0f,
+                       8.0f,
                        256.0f);
     ImGui::DragFloat3(
         Locale::GetText(LocaleKey::LIGHT_POS), glm::value_ptr(m_inputData.m_lightPos), 1.0f);

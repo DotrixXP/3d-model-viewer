@@ -5,6 +5,8 @@ bool OpenglData::s_stenctilTest = false;
 bool OpenglData::s_depthTest = true;
 bool OpenglData::s_faceCulling = false;
 bool OpenglData::s_colorBuffer = true;
+float OpenglData::s_pointSize = 1.0f;
+float OpenglData::s_lineWidth = 1.0f;
 
 void OpenglData::SetBlending(bool value) {
     if (value) {
@@ -28,6 +30,30 @@ void OpenglData::SetDepthTesting(bool value) {
         glDisable(GL_DEPTH_TEST);
         OpenglData::s_depthTest = false;
     }
+}
+
+void OpenglData::SetPointSize(float size) {
+    if (size < 1.0f)
+        size = 1.0f;
+
+    glPointSize(size);
+    s_pointSize = size;
+}
+
+float OpenglData::GetPointSize() {
+    return s_pointSize;
+}
+
+float OpenglData::GetLineWidth() {
+    return s_lineWidth;
+}
+
+void OpenglData::SetLineWidth(float width) {
+    if (width < 1.0f)
+        width = 1.0f;
+
+    glLineWidth(width);
+    s_lineWidth = width;
 }
 
 void OpenglData::SetFaceCulling(bool value, bool front, int frontFace) {

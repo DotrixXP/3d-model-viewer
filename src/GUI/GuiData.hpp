@@ -27,6 +27,8 @@ struct InputData {
               glm::vec3 modelScale,
               float modelRotAngle,
               bool allowCameraInput);
+    
+
     [[nodiscard]] const glm::mat4 GetModelMatrix() const;
     [[nodiscard]] bool GetAllowCameraInput() const;
     [[nodiscard]] float GetLightIntensity() const;
