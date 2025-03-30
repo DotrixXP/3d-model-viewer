@@ -430,7 +430,7 @@ void WindowSystem::RenderMainMenuBar(bool isObjectRendered) {
         if (!isObjectRendered)
             ImGui::EndDisabled();
 
-        if (ImGui::Button("Post processing options")) {
+        if (ImGui::Button("Post processing")) {
             s_showPostProcessingSettings = !s_showPostProcessingSettings;
         }
 
@@ -468,7 +468,7 @@ void WindowSystem::RenderPostProcessingSettings() {
     wc.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoDockingOverMe;
     ImGui::SetNextWindowClass(&wc);
 
-    if (ImGui::Begin("Post processing options")) {
+    if (ImGui::Begin("Post processing")) {
         ImGui::Text("Assimp post processing");
         ImGui::Separator();
 
