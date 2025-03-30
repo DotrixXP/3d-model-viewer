@@ -108,6 +108,9 @@ void WindowSystem::RenderWindows(bool isObjectRendered) {
                                  ImGui::GetMainViewport(),
                                  ImGuiDockNodeFlags_NoWindowMenuButton);
 
+    RenderModelErrorWindow();
+    RenderTextureErrorWindow();
+
     RenderApplicationSettings();
 
     if (GuiErrorWindow::s_open)
@@ -218,9 +221,6 @@ void WindowSystem::RenderWindows(bool isObjectRendered) {
 
         if (!isObjectRendered)
             ImGui::EndDisabled();
-
-        RenderModelErrorWindow();
-        RenderTextureErrorWindow();
     }
     ImGui::End();
 
@@ -245,19 +245,18 @@ void WindowSystem::RenderRendererWidgets() {
     }
 
     static float lineWidth = 1.0f;
-    
-    if(m_inputData.m_polygonMode != PolygonMode::LINE)
+
+    if (m_inputData.m_polygonMode != PolygonMode::LINE)
         ImGui::BeginDisabled();
-    
 
     if (ImGui::SliderFloat(Locale::GetText(LocaleKey::LINE_WIDTH), &lineWidth, 1.0f, 5.0f)) {
         if (lineWidth != OpenglData::GetLineWidth())
             OpenglData::SetLineWidth(lineWidth);
     }
 
-    if(m_inputData.m_polygonMode != PolygonMode::LINE)
+    if (m_inputData.m_polygonMode != PolygonMode::LINE)
         ImGui::EndDisabled();
-    
+
     ImGui::Separator();
 
     if (ImGui::RadioButton(Locale::GetText(LocaleKey::POINTS_MODE),
@@ -266,8 +265,8 @@ void WindowSystem::RenderRendererWidgets() {
     }
 
     static float pointSize = 1.0f;
-    
-    if(m_inputData.m_polygonMode != PolygonMode::POINT)
+
+    if (m_inputData.m_polygonMode != PolygonMode::POINT)
         ImGui::BeginDisabled();
 
     if (ImGui::SliderFloat(Locale::GetText(LocaleKey::POINT_SIZE), &pointSize, 1.0f, 10.0f)) {
@@ -275,7 +274,7 @@ void WindowSystem::RenderRendererWidgets() {
             OpenglData::SetPointSize(pointSize);
     }
 
-    if(m_inputData.m_polygonMode != PolygonMode::POINT)
+    if (m_inputData.m_polygonMode != PolygonMode::POINT)
         ImGui::EndDisabled();
     ImGui::Separator();
 }
@@ -304,21 +303,22 @@ void WindowSystem::OpenModelSelectionDialog() {
 
 void WindowSystem::RenderModelErrorWindow() {
     if (s_showModelErrorWindow) {
-        ImGui::OpenPopup(Locale::GetText(LocaleKey::FILE_WAS_NOT_SELECTED));
-        if (ImGui::BeginPopupModal(Locale::GetText(LocaleKey::MODEL_WAS_NOT_SELECTED),
-                                   nullptr,
-                                   ImGuiWindowFlags_AlwaysAutoResize
-                                       | ImGuiWindowFlags_NoCollapse)) {
-            ImGui::Text("%s", Locale::GetText(LocaleKey::FILE_EXTENSION_NOT_SUPPORTED));
-            ImGui::Separator();
+        ImGui::OpenPopup(Locale::GetText(LocaleKey::MODEL_WAS_NOT_SELECTED)); // Ensure name matches
+    }
 
-            if (ImGui::Button(Locale::GetText(LocaleKey::OK), ImVec2(120, 0))) {
-                s_showModelErrorWindow = false;
-                ImGui::CloseCurrentPopup();
-            }
+    if (ImGui::BeginPopupModal(Locale::GetText(LocaleKey::MODEL_WAS_NOT_SELECTED),
+                               nullptr,
+                               ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse)) {
 
-            ImGui::EndPopup();
+        ImGui::Text("%s", Locale::GetText(LocaleKey::FILE_EXTENSION_NOT_SUPPORTED));
+        ImGui::Separator();
+
+        if (ImGui::Button(Locale::GetText(LocaleKey::OK), ImVec2(120, 0))) {
+            s_showModelErrorWindow = false;
+            ImGui::CloseCurrentPopup();
         }
+
+        ImGui::EndPopup();
     }
 }
 
@@ -452,7 +452,6 @@ void WindowSystem::RenderClearColorPicker() {
 }
 
 void WindowSystem::RenderModelInfo() {
-    ImGui::Separator();
     ImGui::Text("%s", Locale::GetText(LocaleKey::MODEL_INFO));
     ImGui::Text((std::string(Locale::GetText(LocaleKey::VERTEX_COUNT)) + std::string(" ")
                  + std::string("%d"))
@@ -462,7 +461,6 @@ void WindowSystem::RenderModelInfo() {
                  + std::string("%d"))
                     .c_str(),
                 Renderer::GetInstance().GetIndicesCount());
-    ImGui::Separator();
 }
 
 void WindowSystem::RenderPostProcessingSettings() {
@@ -471,7 +469,7 @@ void WindowSystem::RenderPostProcessingSettings() {
     ImGui::SetNextWindowClass(&wc);
 
     if (ImGui::Begin("Post processing options")) {
-        ImGui::Text("Post processing options are applied after model reload!");
+        ImGui::Text("Assimp post processing");
         ImGui::Separator();
 
         static std::uint32_t postProcessingOptions = 0;
@@ -559,8 +557,7 @@ void WindowSystem::RenderPostProcessingSettings() {
         ModelLoader::SetPostProcessingOptions(postProcessingOptions);
 
         ImGui::Separator();
-        if (ImGui::Button("Reload model with post processing options")) {
-        }
+        ImGui::Text("%s", Locale::GetText(LocaleKey::YOU_NEED_TO_RELOAD_MODEL));
 
         ImGui::End();
     }
@@ -647,6 +644,7 @@ bool WindowSystem::RenderMaterialDialog(MaterialSelection& materialSelection,
                     == SUPPORTED_TEXTURE_EXTENSIONS.end()) {
                     Log::Error("Unsuported texture format" + texture);
                     s_showTextureErrorWindow = true;
+                    ImGui::EndTabItem();
                     ImGui::EndTabBar();
                     ImGui::End();
                     return false;

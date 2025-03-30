@@ -1,5 +1,0 @@
-#!/bin/bash
-SELF=$(readlink -f "$0")
-HERE=${SELF%/*}
-EXEC="${HERE}/usr/bin/3DViewer"
-exec "${EXEC}"

@@ -80,4 +80,5 @@ enum class LocaleKey : uint32_t {
     MESSAGE,
     LINE_WIDTH,
     POINT_SIZE,
+    YOU_NEED_TO_RELOAD_MODEL,
 };
